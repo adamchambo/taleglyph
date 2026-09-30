@@ -1,0 +1,10 @@
+[data-theme="fantasy"] {
+  --bg: #f5f3ed;
+  --surface: #fffefb;
+  --text: #293c35;
+  --muted: #64736b;
+  --accent: #315b47;
+  --sidebar: #243d33;
+  --border: #dedfd5;
+  --contrast: #fff;
+}

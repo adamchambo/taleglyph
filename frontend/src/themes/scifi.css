@@ -1,0 +1,10 @@
+[data-theme="scifi"] {
+  --bg: #101b26;
+  --surface: #182635;
+  --text: #e4eff6;
+  --muted: #a8bfcc;
+  --accent: #91dbdf;
+  --sidebar: #0a131e;
+  --border: #304653;
+  --contrast: #10222b;
+}
