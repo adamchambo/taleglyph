@@ -1,23 +1,11 @@
 import { apiClient } from "../../../lib/apiClient";
 import type {
-  Story,
   Chapter,
   Scene,
   ChapterWorkspace,
   NovelWorkspace,
 } from "../types";
 export const manuscriptApi = {
-  stories: (worldId: string, signal?: AbortSignal) =>
-    apiClient<Story[]>(`/stories?worldId=${worldId}`, { signal }),
-  story: (id: string, signal?: AbortSignal) =>
-    apiClient<Story>(`/stories/${id}`, { signal }),
-  chapters: (id: string, signal?: AbortSignal) =>
-    apiClient<Chapter[]>(`/stories/${id}/chapters`, { signal }),
-  createStory: (worldId: string, title: string) =>
-    apiClient<Story>("/manuscripts/stories", {
-      method: "POST",
-      body: JSON.stringify({ worldId, title }),
-    }),
   novel: (id: string, signal?: AbortSignal) =>
     apiClient<NovelWorkspace>(`/manuscripts/novels/${id}`, { signal }),
   createChapter: (id: string, title: string) =>

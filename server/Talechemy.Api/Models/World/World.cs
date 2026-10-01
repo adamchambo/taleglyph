@@ -6,4 +6,5 @@ public sealed class World
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
     public string Theme { get; set; } = "";
+    public Guid? CoverAssetId { get; set; }
 }

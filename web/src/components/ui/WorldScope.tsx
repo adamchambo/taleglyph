@@ -9,10 +9,10 @@ export function WorldScope({
 }: {
   children: (worldId: string) => ReactNode;
 }) {
-  const { story } = useWorkspace();
+  const { space } = useWorkspace();
   const worlds = useResource(worldApi.list);
   const [params, setParams] = useSearchParams();
-  const requested = story?.spaceId ?? params.get("world");
+  const requested = space?.id ?? params.get("world");
   const id =
     worlds.data?.find((w) => w.id === requested)?.id ?? worlds.data?.[0]?.id;
   return (
@@ -24,7 +24,7 @@ export function WorldScope({
       />
       {id ? (
         <>
-          {!story ? (
+          {!space ? (
             <label className="world-select">
               Story world
               <select
@@ -39,7 +39,7 @@ export function WorldScope({
               </select>
             </label>
           ) : (
-            <p className="scope-caption">Shared assets · {story.spaceName}</p>
+            <p className="scope-caption">Shared assets · {space.name}</p>
           )}
           {children(id)}
         </>
@@ -49,7 +49,7 @@ export function WorldScope({
             Create a world to keep its writing, characters and artwork
             connected.
           </p>
-          <Link to="/worlds">Create a world →</Link>
+          <Link to="/spaces/new">Create a space →</Link>
         </div>
       ) : null}
     </>

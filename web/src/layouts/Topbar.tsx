@@ -2,13 +2,13 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useWorkspace } from "../app/workspaceContext";
 import { Icon } from "../components/ui/Icon";
 export function Topbar() {
-  const { story, library, nav, setNav } = useWorkspace();
+  const { space, story, library, nav, setNav } = useWorkspace();
   const navigate = useNavigate();
   const location = useLocation();
   const hasPreviousPage = (window.history.state?.idx ?? 0) > 0;
   const isLibrary =
     location.pathname === "/library" || location.pathname === "/";
-  const fallback = story ? `/stories/${story.id}` : "/library";
+  const fallback = space ? `/spaces/${space.id}` : "/library";
   const canGoBack = hasPreviousPage || location.pathname !== fallback;
   return (
     <header className="studio-topbar">
@@ -38,26 +38,30 @@ export function Topbar() {
         </nav>
       ) : null}
       <div className="context-breadcrumb">
-        {story ? (
+        {space ? (
           <>
-            <span className="space-crumb" title={story.spaceName}>
-              {story.spaceName}
-            </span>
-            <span className="crumb-divider">/</span>
-            <label className="sr-only" htmlFor="active-story">
-              Switch story
+            <label className="sr-only" htmlFor="active-space">
+              Switch space
             </label>
             <select
-              id="active-story"
-              value={story.id}
-              onChange={(e) => navigate(`/stories/${e.target.value}`)}
+              id="active-space"
+              value={space.id}
+              onChange={(e) => navigate(`/spaces/${e.target.value}`)}
             >
-              {library?.stories.map((s) => (
+              {library?.spaces.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.title}
+                  {s.name}
                 </option>
               ))}
             </select>
+            {story ? (
+              <>
+                <span className="crumb-divider">/</span>
+                <span className="space-crumb" title={story.title}>
+                  {story.title}
+                </span>
+              </>
+            ) : null}
           </>
         ) : (
           <span>
@@ -79,7 +83,7 @@ export function Topbar() {
         <Link
           className="icon-button"
           aria-label="Appearance settings"
-          to={`/appearance${story ? `?story=${story.id}` : ""}`}
+          to={`/appearance${space ? `?space=${space.id}` : ""}`}
         >
           <Icon name="settings" />
         </Link>

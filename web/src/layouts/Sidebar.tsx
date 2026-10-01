@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useWorkspace } from "../app/workspaceContext";
-import { sections, sectionPath } from "../features/library/types";
+import { spaceSections, spacePath } from "../features/library/types";
 import { Icon } from "../components/ui/Icon";
 export function Sidebar() {
-  const { story, nav, setNav } = useWorkspace();
+  const { space, nav, setNav } = useWorkspace();
   const [hovered, setHovered] = useState(false);
   const [keyboardFocus, setKeyboardFocus] = useState(false);
   const open = hovered || keyboardFocus || nav === "expanded";
@@ -64,25 +64,25 @@ export function Sidebar() {
           <Icon name="library" />
           <span className="nav-label">Library</span>
         </NavLink>
-        {story ? (
+        {space ? (
           <>
-            <p className="nav-section nav-label">YOUR STORY</p>
-            {sections.map((s) => (
+            <p className="nav-section nav-label">YOUR SPACE</p>
+            {spaceSections.map((s) => (
               <NavLink
                 key={s.id}
-                to={sectionPath(story.id, s.id)}
+                to={spacePath(space.id, s.id)}
                 end={s.id === "overview"}
                 title={s.label}
                 aria-label={s.label}
               >
-                <Icon name={s.id} />
+                <Icon name={s.icon} />
                 <span className="nav-label">{s.label}</span>
               </NavLink>
             ))}
           </>
         ) : (
           <div className="sidebar-invitation nav-label">
-            <p>A place for every part of your story.</p>
+            <p>A place for every story in your universe.</p>
             <Link to="/spaces/new">
               Begin a space <Icon name="arrow" size={15} />
             </Link>
@@ -91,7 +91,7 @@ export function Sidebar() {
       </nav>
       <div className="sidebar-footer">
         <Link
-          to={`/appearance${story ? `?story=${story.id}` : ""}`}
+          to={`/appearance${space ? `?space=${space.id}` : ""}`}
           title="Appearance"
           aria-label="Appearance"
         >

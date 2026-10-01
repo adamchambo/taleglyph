@@ -1,9 +1,14 @@
 import { createContext, useContext } from "react";
-import type { LibrarySnapshot, StoryCard } from "../features/library/types";
+import type {
+  LibrarySnapshot,
+  SpaceCard,
+  StoryCard,
+} from "../features/library/types";
 export type RecentWork = { path: string; label: string; visitedAt: string };
 export type NavigationMode = "expanded" | "rail" | "focus";
 export const WorkspaceContext = createContext<{
   library: LibrarySnapshot | null;
+  space: SpaceCard | null;
   story: StoryCard | null;
   loading: boolean;
   error: string;

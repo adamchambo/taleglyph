@@ -87,7 +87,7 @@ namespace Talechemy.Api.Data.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("StoryId")
+                    b.Property<Guid?>("CoverAssetId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Title")
@@ -95,9 +95,19 @@ namespace Talechemy.Api.Data.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid>("WorldId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("StoryId");
+                    b.HasIndex("CoverAssetId");
+
+                    b.HasIndex("WorldId");
 
                     b.ToTable("Comics");
                 });
@@ -301,6 +311,35 @@ namespace Talechemy.Api.Data.Migrations
                     b.ToTable("AdaptationLinks");
                 });
 
+            modelBuilder.Entity("Talechemy.Api.Models.Stories.Arc", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("StoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoryId", "Order")
+                        .IsUnique();
+
+                    b.ToTable("Arcs");
+                });
+
             modelBuilder.Entity("Talechemy.Api.Models.Stories.Chapter", b =>
                 {
                     b.Property<Guid>("Id")
@@ -312,17 +351,12 @@ namespace Talechemy.Api.Data.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("StoryId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("StoryId");
 
                     b.HasIndex("NovelId", "Order")
                         .IsUnique();
@@ -335,7 +369,7 @@ namespace Talechemy.Api.Data.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("StoryId")
+                    b.Property<Guid?>("CoverAssetId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Title")
@@ -343,9 +377,19 @@ namespace Talechemy.Api.Data.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid>("WorldId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("StoryId");
+                    b.HasIndex("CoverAssetId");
+
+                    b.HasIndex("WorldId");
 
                     b.ToTable("Novels");
                 });
@@ -384,32 +428,9 @@ namespace Talechemy.Api.Data.Migrations
                     b.ToTable("Scenes");
                 });
 
-            modelBuilder.Entity("Talechemy.Api.Models.Stories.Series", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("character varying(120)");
-
-                    b.Property<Guid>("WorldId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("WorldId");
-
-                    b.ToTable("Series");
-                });
-
             modelBuilder.Entity("Talechemy.Api.Models.Stories.Story", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CoverAssetId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Revision")
@@ -417,16 +438,6 @@ namespace Talechemy.Api.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(1);
-
-                    b.Property<Guid?>("SeriesId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("StartingSection")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)")
-                        .HasDefaultValue("overview");
 
                     b.Property<string>("Synopsis")
                         .IsRequired()
@@ -450,10 +461,6 @@ namespace Talechemy.Api.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CoverAssetId");
-
-                    b.HasIndex("SeriesId");
 
                     b.HasIndex("WorldId");
 
@@ -498,6 +505,42 @@ namespace Talechemy.Api.Data.Migrations
                     b.HasIndex("WorldId");
 
                     b.ToTable("Characters");
+                });
+
+            modelBuilder.Entity("Talechemy.Api.Models.World.Link", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FromId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FromKind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<Guid>("ToId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ToKind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<Guid>("WorldId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorldId");
+
+                    b.HasIndex("ToKind", "ToId");
+
+                    b.HasIndex("FromKind", "FromId", "ToKind", "ToId")
+                        .IsUnique();
+
+                    b.ToTable("Links");
                 });
 
             modelBuilder.Entity("Talechemy.Api.Models.World.Location", b =>
@@ -568,6 +611,11 @@ namespace Talechemy.Api.Data.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
                     b.Property<Guid>("WorldId")
                         .HasColumnType("uuid");
 
@@ -618,6 +666,9 @@ namespace Talechemy.Api.Data.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("CoverAssetId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(4000)
@@ -634,6 +685,8 @@ namespace Talechemy.Api.Data.Migrations
                         .HasColumnType("character varying(32)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CoverAssetId");
 
                     b.ToTable("Worlds");
                 });
@@ -658,9 +711,14 @@ namespace Talechemy.Api.Data.Migrations
 
             modelBuilder.Entity("Talechemy.Api.Models.Comics.Comic", b =>
                 {
-                    b.HasOne("Talechemy.Api.Models.Stories.Story", null)
+                    b.HasOne("Talechemy.Api.Models.Assets.Asset", null)
                         .WithMany()
-                        .HasForeignKey("StoryId")
+                        .HasForeignKey("CoverAssetId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Talechemy.Api.Models.World.World", null)
+                        .WithMany()
+                        .HasForeignKey("WorldId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -730,14 +788,8 @@ namespace Talechemy.Api.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Talechemy.Api.Models.Stories.Chapter", b =>
+            modelBuilder.Entity("Talechemy.Api.Models.Stories.Arc", b =>
                 {
-                    b.HasOne("Talechemy.Api.Models.Stories.Novel", null)
-                        .WithMany()
-                        .HasForeignKey("NovelId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Talechemy.Api.Models.Stories.Story", null)
                         .WithMany()
                         .HasForeignKey("StoryId")
@@ -745,11 +797,25 @@ namespace Talechemy.Api.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Talechemy.Api.Models.Stories.Chapter", b =>
+                {
+                    b.HasOne("Talechemy.Api.Models.Stories.Novel", null)
+                        .WithMany()
+                        .HasForeignKey("NovelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Talechemy.Api.Models.Stories.Novel", b =>
                 {
-                    b.HasOne("Talechemy.Api.Models.Stories.Story", null)
+                    b.HasOne("Talechemy.Api.Models.Assets.Asset", null)
                         .WithMany()
-                        .HasForeignKey("StoryId")
+                        .HasForeignKey("CoverAssetId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Talechemy.Api.Models.World.World", null)
+                        .WithMany()
+                        .HasForeignKey("WorldId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -763,27 +829,8 @@ namespace Talechemy.Api.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Talechemy.Api.Models.Stories.Series", b =>
-                {
-                    b.HasOne("Talechemy.Api.Models.World.World", null)
-                        .WithMany()
-                        .HasForeignKey("WorldId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Talechemy.Api.Models.Stories.Story", b =>
                 {
-                    b.HasOne("Talechemy.Api.Models.Assets.Asset", null)
-                        .WithMany()
-                        .HasForeignKey("CoverAssetId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Talechemy.Api.Models.Stories.Series", null)
-                        .WithMany()
-                        .HasForeignKey("SeriesId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Talechemy.Api.Models.World.World", null)
                         .WithMany()
                         .HasForeignKey("WorldId")
@@ -792,6 +839,15 @@ namespace Talechemy.Api.Data.Migrations
                 });
 
             modelBuilder.Entity("Talechemy.Api.Models.World.Character", b =>
+                {
+                    b.HasOne("Talechemy.Api.Models.World.World", null)
+                        .WithMany()
+                        .HasForeignKey("WorldId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Talechemy.Api.Models.World.Link", b =>
                 {
                     b.HasOne("Talechemy.Api.Models.World.World", null)
                         .WithMany()
@@ -846,6 +902,14 @@ namespace Talechemy.Api.Data.Migrations
                         .HasForeignKey("WorldId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Talechemy.Api.Models.World.World", b =>
+                {
+                    b.HasOne("Talechemy.Api.Models.Assets.Asset", null)
+                        .WithMany()
+                        .HasForeignKey("CoverAssetId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 #pragma warning restore 612, 618
         }

@@ -1,3 +1,3 @@
 namespace Talechemy.Api.DTOs.Stories;
 
-public sealed record ChapterResponse(Guid Id, Guid StoryId, string Title, int Order);
+public sealed record ChapterResponse(Guid Id, Guid NovelId, string Title, int Order);

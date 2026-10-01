@@ -3,38 +3,25 @@ import { Link } from "react-router-dom";
 import { useWorkspace } from "../../../app/workspaceContext";
 import { Icon } from "../../../components/ui/Icon";
 import { ResourceState } from "../../../components/ui/ResourceState";
-import { StoryCards } from "../components/StoryCards";
 import { StoryArtwork } from "../components/StoryArtwork";
 export function LibraryPage() {
   const { library, loading, error, refresh, recent } = useWorkspace();
   const [query, setQuery] = useState("");
-  const [group, setGroup] = useState("all");
-  const stories = library?.stories ?? [];
-  const filtered = stories.filter((s) =>
-    [s.title, s.overview, s.spaceName, s.seriesName ?? "", ...s.tags]
+  const spaces = library?.spaces ?? [];
+  const needle = query.trim().toLowerCase();
+  const filtered = spaces.filter((space) =>
+    [
+      space.name,
+      space.description,
+      ...(library?.stories
+        .filter((s) => s.spaceId === space.id)
+        .flatMap((s) => [s.title, ...s.tags]) ?? []),
+    ]
       .join(" ")
       .toLowerCase()
-      .includes(query.trim().toLowerCase()),
+      .includes(needle),
   );
-  const groups = new Map<string, { label: string; items: typeof filtered }>();
-  for (const story of filtered) {
-    const key =
-      group === "space"
-        ? story.spaceId
-        : group === "series"
-          ? (story.seriesId ?? "standalone")
-          : "all";
-    const label =
-      group === "space"
-        ? story.spaceName
-        : group === "series"
-          ? (story.seriesName ?? "Standalone stories")
-          : "Your stories";
-    const entry = groups.get(key) ?? { label, items: [] };
-    entry.items.push(story);
-    groups.set(key, entry);
-  }
-  const resumed = stories
+  const resumed = spaces
     .filter((s) => recent[s.id]?.path?.startsWith("/"))
     .sort((a, b) =>
       (recent[b.id]?.visitedAt ?? "").localeCompare(
@@ -47,10 +34,11 @@ export function LibraryPage() {
         <div>
           <p className="eyebrow">A little possibility. A whole new world.</p>
           <h1>
-            Your stories live here<span className="accent-dot">.</span>
+            Your spaces live here<span className="accent-dot">.</span>
           </h1>
           <p className="intro">
-            Build a world, follow a character, or start with a single scene.
+            Each space is a universe: its world, its stories, and every novel
+            and comic that tells them.
           </p>
         </div>
         <Link className="button primary-create" to="/spaces/new">
@@ -61,10 +49,10 @@ export function LibraryPage() {
       <ResourceState loading={loading} error={error} retry={refresh} />
       {resumed ? (
         <Link className="resume-banner" to={recent[resumed.id].path}>
-          <StoryArtwork assetId={resumed.coverAssetId} title={resumed.title} />
+          <StoryArtwork assetId={resumed.coverAssetId} title={resumed.name} />
           <div>
             <span className="eyebrow">Pick up the thread</span>
-            <h2>{resumed.title}</h2>
+            <h2>{resumed.name}</h2>
             <span>{recent[resumed.id].label} · Continue working</span>
           </div>
           <span className="resume-arrow">
@@ -72,71 +60,70 @@ export function LibraryPage() {
           </span>
         </Link>
       ) : null}
-      {library && library.spaces.length > 0 ? (
-        <div className="space-list">
-          {library.spaces.map((space) => {
-            const count = stories.filter(
-              (story) => story.spaceId === space.id,
-            ).length;
-            return (
-              <Link
-                className="space-entry"
-                key={space.id}
-                to={`/spaces/${space.id}`}
-              >
-                <strong>{space.name}</strong>
-                <span>
-                  {count} {count === 1 ? "story" : "stories"}
-                </span>
-              </Link>
-            );
-          })}
+      {spaces.length ? (
+        <div className="library-controls">
+          <label className="search-field">
+            <Icon name="search" />
+            <span className="sr-only">Search spaces</span>
+            <input
+              placeholder="Search spaces, stories or tags…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </label>
+          <span className="library-count">
+            {filtered.length} {filtered.length === 1 ? "space" : "spaces"}
+          </span>
         </div>
       ) : null}
-      <div className="library-controls">
-        <label className="search-field">
-          <Icon name="search" />
-          <span className="sr-only">Search stories</span>
-          <input
-            placeholder="Search stories, spaces or tags…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </label>
-        <label className="group-control">
-          Group by
-          <select value={group} onChange={(e) => setGroup(e.target.value)}>
-            <option value="all">All stories</option>
-            <option value="space">Space</option>
-            <option value="series">Series</option>
-          </select>
-        </label>
-        <span className="library-count">
-          {filtered.length} {filtered.length === 1 ? "story" : "stories"}
-        </span>
+      <div className="story-grid">
+        {filtered.map((space, i) => (
+          <Link
+            className="story-tile"
+            key={space.id}
+            to={`/spaces/${space.id}`}
+          >
+            <StoryArtwork
+              key={space.coverAssetId}
+              assetId={space.coverAssetId}
+              title={space.name}
+              variant={i}
+            />
+            <div className="story-tile-body">
+              <div className="tile-kicker">
+                <span>Space</span>
+                <Icon name="arrow" size={18} />
+              </div>
+              <h2>{space.name}</h2>
+              <p>
+                {space.description || "A universe waiting for its stories."}
+              </p>
+              <div className="tile-footer">
+                <span>
+                  {space.storyCount}{" "}
+                  {space.storyCount === 1 ? "story" : "stories"}
+                </span>
+                <span>
+                  {space.novelCount}{" "}
+                  {space.novelCount === 1 ? "novel" : "novels"} ·{" "}
+                  {space.comicCount}{" "}
+                  {space.comicCount === 1 ? "comic" : "comics"}
+                </span>
+              </div>
+            </div>
+          </Link>
+        ))}
       </div>
-      {[...groups].map(([key, { label, items }]) => (
-        <div key={key} className="story-group">
-          <h2 className="group-heading">
-            {group === "space" ? (
-              <Link to={`/spaces/${key}`}>{label}</Link>
-            ) : (
-              label
-            )}
-          </h2>
-          <StoryCards stories={items ?? []} />
-        </div>
-      ))}
       {library && filtered.length === 0 ? (
         <div className="library-empty">
-          <Icon name="novel" size={40} />
+          <Icon name="world" size={40} />
           <h2>
-            {query ? "No stories found." : "Every story starts somewhere."}
+            {query ? "No spaces found." : "Every universe starts somewhere."}
           </h2>
           <p>
             {query
-              ? "Try another title, space or tag."
-              : "Create a space first. Stories are added inside it."}
+              ? "Try another name, story or tag."
+              : "Create a space first. Stories, novels and comics live inside it."}
           </p>
           {!query ? (
             <Link className="button" to="/spaces/new">

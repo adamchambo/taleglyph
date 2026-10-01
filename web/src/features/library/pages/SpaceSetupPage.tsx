@@ -59,7 +59,7 @@ export function SpaceSetupPage() {
               space.
             </p>
             <div className="setup-actions">
-              <Link className="button" to={`/stories/new?space=${created.id}`}>
+              <Link className="button" to={`/spaces/${created.id}/stories/new`}>
                 Add a story
                 <Icon name="arrow" size={17} />
               </Link>

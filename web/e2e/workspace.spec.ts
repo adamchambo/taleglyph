@@ -21,14 +21,14 @@ test("library navigation and appearance persist without changing the layout", as
   page,
 }) => {
   await page.route("**/api/library", (route) =>
-    route.fulfill({ json: { stories: [], spaces: [], series: [] } }),
+    route.fulfill({ json: { stories: [], spaces: [] } }),
   );
   await page.addInitScript(() =>
     localStorage.setItem("talechemy.v1.navigation", JSON.stringify("expanded")),
   );
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Your stories live here." }),
+    page.getByRole("heading", { name: "Your spaces live here." }),
   ).toBeVisible();
   const sidebar = page.locator(".studio-sidebar");
   const before = await page.locator("main").boundingBox();
@@ -37,7 +37,7 @@ test("library navigation and appearance persist without changing the layout", as
   await expect.poll(async () => (await sidebar.boundingBox())!.width).toBe(244);
   expect((await page.locator("main").boundingBox())!.x).toBe(before!.x);
 
-  await page.getByRole("heading", { name: "Your stories live here." }).hover();
+  await page.getByRole("heading", { name: "Your spaces live here." }).hover();
   await expect.poll(async () => (await sidebar.boundingBox())!.width).toBe(76);
   await expect(page.locator(".studio-shell")).toHaveClass(/nav-rail/);
   await page.reload();
@@ -69,7 +69,7 @@ test("library navigation and appearance persist without changing the layout", as
   await expect(page.locator(".studio-sidebar")).not.toHaveClass(/is-open/);
 });
 
-test("story onboarding, comic-first creation, settings and context survive reload", async ({
+test("space hub, story arcs, linked comic, notes and context survive reload", async ({
   page,
 }) => {
   test.skip(
@@ -88,7 +88,8 @@ test("story onboarding, comic-first creation, settings and context survive reloa
   await page.getByLabel("Space name", { exact: true }).fill(spaceName);
   await page.getByRole("button", { name: "Create space", exact: true }).click();
   await expect(page).toHaveURL(/\/spaces\/[a-f0-9-]+$/);
-  await page.getByRole("link", { name: "New story", exact: true }).click();
+  const spaceId = page.url().split("/").at(-1)!;
+  await page.goto(`/spaces/${spaceId}/stories/new`);
   await page.getByLabel("Story name", { exact: true }).fill(name);
   await page
     .getByLabel("Brief story overview", { exact: false })
@@ -96,8 +97,20 @@ test("story onboarding, comic-first creation, settings and context survive reloa
   await page.getByRole("button", { name: "Create story", exact: true }).click();
   await expect(page).toHaveURL(/\/stories\/[a-f0-9-]+$/);
   const storyId = page.url().split("/").at(-1)!;
-  await page.goto(`/stories/${storyId}/comic`);
-  await expect(page.getByLabel("Switch story")).toHaveValue(storyId);
+  await page.getByText("Add an arc", { exact: true }).click();
+  await page.getByLabel("Arc title", { exact: true }).fill("The crossing");
+  await page.getByRole("button", { name: "Add arc", exact: true }).click();
+  await page.getByLabel("Arc title", { exact: true }).fill("The return");
+  await page.getByRole("button", { name: "Add arc", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Move The return up", exact: true })
+    .click();
+  await expect(page.locator(".arc-list strong")).toHaveText([
+    "The return",
+    "The crossing",
+  ]);
+  await page.goto(`/spaces/${spaceId}/works`);
+  await expect(page.getByLabel("Switch space")).toHaveValue(spaceId);
   await page
     .getByLabel("Comic title", { exact: true })
     .fill("An independent comic");
@@ -107,8 +120,24 @@ test("story onboarding, comic-first creation, settings and context survive reloa
   await expect(page).toHaveURL(/\/comics\/[a-f0-9-]+$/);
   await expect(page.locator(".comic-panel")).toHaveCount(3);
   await page.reload();
-  await expect(page.getByLabel("Switch story")).toHaveValue(storyId);
-  await page.goto(`/stories/${storyId}/settings`);
+  await expect(page.getByLabel("Switch space")).toHaveValue(spaceId);
+  await page.getByText("What this comic tells, title and cover").click();
+  await page
+    .getByLabel("Link a story or arc")
+    .selectOption({ label: "1. The return" });
+  await page.getByRole("button", { name: "Link", exact: true }).click();
+  await expect(page.locator(".link-chips li")).toContainText(
+    `${name} · The return`,
+  );
+  await page.goto(`/spaces/${spaceId}/stories/${storyId}`);
+  await expect(page.locator(".comic-entry")).toContainText("The return");
+  await page.goto(`/spaces/${spaceId}/notes`);
+  await page.getByLabel("Note title", { exact: true }).fill("Open question");
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
+  await expect(page.locator(".note-card h2")).toHaveText("Open question");
+  await page.goto(`/stories/${storyId}`);
+  await expect(page).toHaveURL(`/spaces/${spaceId}/stories/${storyId}`);
+  await page.goto(`/spaces/${spaceId}/stories/${storyId}/settings`);
   await page.getByRole("button", { name: "Fantasy", exact: true }).click();
   await page.getByLabel("Story name", { exact: true }).fill(name + " revised");
   await page
@@ -120,9 +149,8 @@ test("story onboarding, comic-first creation, settings and context survive reloa
     page.getByRole("button", { name: "Fantasy", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   await page.goto("/library");
-  await page.getByLabel("Search stories").fill(name + " revised");
+  await page.getByLabel("Search spaces").fill(name + " revised");
   await expect(page.locator(".story-tile")).toHaveCount(1);
-  await page.getByLabel("Group by").selectOption("space");
-  await expect(page.locator(".group-heading")).toHaveText(spaceName);
+  await expect(page.locator(".story-tile h2")).toHaveText(spaceName);
   expect(errors).toEqual([]);
 });

@@ -14,7 +14,6 @@ public sealed class ChapterConfiguration : IEntityTypeConfiguration<Chapter>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.Title).IsRequired().HasMaxLength(120);
-        builder.HasOne<Story>().WithMany().HasForeignKey(x => x.StoryId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Novel>().WithMany().HasForeignKey(x => x.NovelId).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(x => new { x.NovelId, x.Order }).IsUnique();
     }

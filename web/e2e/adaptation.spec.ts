@@ -31,19 +31,13 @@ test("write, adapt, place artwork, reuse a template, and review changed prose", 
       errors.push(`${response.status()} ${response.url()}`);
   });
   const suffix = Date.now().toString();
-  await page.goto("/worlds");
-  await page.getByLabel("World name").fill(`Browser world ${suffix}`);
-  await page.getByRole("button", { name: "Create world", exact: true }).click();
+  await page.goto("/spaces/new");
   await page
-    .getByRole("link", { name: `Browser world ${suffix}`, exact: true })
-    .click();
-  await page
-    .getByRole("link", { name: "Open manuscripts", exact: true })
-    .click();
-  await page.getByLabel("Story title").fill("The Lantern Road");
-  await page
-    .getByRole("button", { name: "Create manuscript", exact: true })
-    .click();
+    .getByLabel("Space name", { exact: true })
+    .fill(`Browser space ${suffix}`);
+  await page.getByRole("button", { name: "Create space", exact: true }).click();
+  await expect(page).toHaveURL(/\/spaces\/[a-f0-9-]+$/);
+  await page.goto(`${page.url()}/works`);
   await page.getByLabel("Novel title").fill("The Lantern Road");
   await page.getByRole("button", { name: "Add novel", exact: true }).click();
   await page.getByLabel("Chapter title").fill("A Light Beyond the Trees");
@@ -158,7 +152,9 @@ test("write, adapt, place artwork, reuse a template, and review changed prose", 
   // Unsaved edits are guarded when leaving the editor.
   await page.getByRole("button", { name: "+ Text", exact: true }).click();
   page.once("dialog", (dialog) => dialog.dismiss());
-  await page.getByRole("link", { name: "Comic", exact: true }).click();
+  await page
+    .getByRole("link", { name: "Novels & comics", exact: true })
+    .click();
   await expect(
     page.getByRole("button", { name: "Save page", exact: true }),
   ).toBeVisible();

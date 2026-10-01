@@ -18,10 +18,6 @@ public sealed class StoryRepository(TalechemyDbContext db) : IStoryRepository
     {
         return await db.Stories.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct);
     }
-    public async Task<IReadOnlyList<Chapter>> GetChaptersAsync(Guid storyId, CancellationToken ct = default)
-    {
-        return await db.Chapters.AsNoTracking().Where(x => x.StoryId == storyId).OrderBy(x => x.Order).ToArrayAsync(ct);
-    }
     public async Task<Chapter?> GetChapterAsync(Guid id, CancellationToken ct = default)
     {
         return await db.Chapters.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct);

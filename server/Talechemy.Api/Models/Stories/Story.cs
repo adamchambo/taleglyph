@@ -8,8 +8,5 @@ public sealed class Story
     public string Synopsis { get; set; } = "";
     public string[] Tags { get; set; } = [];
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
-    public string StartingSection { get; set; } = "overview";
-    public Guid? CoverAssetId { get; set; }
-    public Guid? SeriesId { get; set; }
     public int Revision { get; set; } = 1;
 }

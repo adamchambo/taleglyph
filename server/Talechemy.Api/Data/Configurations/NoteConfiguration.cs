@@ -15,6 +15,7 @@ public sealed class NoteConfiguration : IEntityTypeConfiguration<Note>
         builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.Title).IsRequired().HasMaxLength(120);
         builder.Property(x => x.Content).IsRequired();
+        builder.Property(x => x.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
         builder.HasOne<World>().WithMany().HasForeignKey(x => x.WorldId).OnDelete(DeleteBehavior.Restrict);
     }
 }

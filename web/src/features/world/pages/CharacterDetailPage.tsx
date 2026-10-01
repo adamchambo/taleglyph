@@ -1,4 +1,3 @@
-import { useWorkspace } from "../../../app/workspaceContext";
 import { useCallback, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useResource } from "../../../hooks/useResource";
@@ -6,7 +5,6 @@ import { ResourceState } from "../../../components/ui/ResourceState";
 import { worldApi } from "../api/worldApi";
 import { CharacterForm } from "../components/CharacterForm";
 export function CharacterDetailPage() {
-  const { story } = useWorkspace();
   const { characterId = "" } = useParams();
   const character = useResource(
     useCallback(
@@ -24,14 +22,8 @@ export function CharacterDetailPage() {
       />
       {character.data ? (
         <>
-          <Link
-            to={
-              story
-                ? `/stories/${story.id}/characters`
-                : `/worlds/${character.data.worldId}`
-            }
-          >
-            ← {story ? "Back to characters" : "Back to world"}
+          <Link to={`/spaces/${character.data.worldId}/characters`}>
+            ← Back to characters
           </Link>
           <h1>{character.data.name}</h1>
           {saved ? <p role="status">Character saved.</p> : null}

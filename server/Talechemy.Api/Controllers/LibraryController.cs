@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Talechemy.Api.DTOs.Library;
-using Talechemy.Api.DTOs.Authoring;
 using Talechemy.Api.Services;
 namespace Talechemy.Api.Controllers;
 [ApiController,Route("api/library")]
@@ -11,9 +10,5 @@ public sealed class LibraryController(LibraryService service):ControllerBase
     [HttpPost("stories")] public async Task<IActionResult> Create(StorySetupRequest request,CancellationToken ct)
     {var story=await service.Create(request,ct);return CreatedAtAction(nameof(Story),new{id=story.Id},story);}
     [HttpPut("stories/{id:guid}")] public async Task<IActionResult> Update(Guid id,StorySetupRequest request,CancellationToken ct)=>Ok(await service.Update(id,request,ct));
-    [HttpPost("series")] public async Task<IActionResult> Series(SeriesSetupRequest request,CancellationToken ct)=>Ok(await service.CreateSeries(request,ct));
     [HttpGet("context/{kind}/{id:guid}")] public async Task<IActionResult> Context(string kind,Guid id,CancellationToken ct)=>Ok(await service.Context(kind,id,ct));
-    [HttpGet("stories/{id:guid}/novels")] public async Task<IActionResult> Novels(Guid id,CancellationToken ct)=>Ok(await service.Novels(id,ct));
-    [HttpPost("stories/{id:guid}/novels")] public async Task<IActionResult> Novel(Guid id,TitleRequest request,CancellationToken ct)=>Ok(await service.CreateNovel(id,request.Title,ct));
-    [HttpPost("stories/{id:guid}/comics")] public async Task<IActionResult> Comic(Guid id,TitleRequest request,CancellationToken ct)=>Ok(new{id=await service.CreateComic(id,request.Title,ct)});
 }

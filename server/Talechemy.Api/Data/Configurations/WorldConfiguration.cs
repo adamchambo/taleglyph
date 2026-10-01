@@ -16,5 +16,6 @@ public sealed class WorldConfiguration : IEntityTypeConfiguration<World>
         builder.Property(x => x.Name).IsRequired().HasMaxLength(120);
         builder.Property(x => x.Description).IsRequired().HasMaxLength(4000);
         builder.Property(x => x.Theme).IsRequired().HasMaxLength(32);
+        builder.HasOne<Asset>().WithMany().HasForeignKey(x => x.CoverAssetId).OnDelete(DeleteBehavior.Restrict);
     }
 }

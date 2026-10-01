@@ -2,6 +2,7 @@ using System.Text.Json;
 using Talechemy.Api.DTOs.Comics;
 using Talechemy.Api.Models.Comics;
 using Talechemy.Api.Models.Stories;
+using Talechemy.Api.Models.World;
 using Talechemy.Api.Providers.Adaptation;
 using Talechemy.Api.Repositories.Interfaces;
 namespace Talechemy.Api.Services;
@@ -11,7 +12,7 @@ public sealed class AdaptationService(IWorkspaceRepository repo, IAdaptationPlan
     public async Task<Guid> Adapt(Guid chapterId, AdaptChapterRequest request, CancellationToken ct)
     {
         var chapter = await repo.Chapter(chapterId, ct) ?? throw new WorkflowException(404, "Chapter not found.");
-        var story = (await repo.Story(chapter.StoryId, ct))!;
+        var novel = (await repo.Novel(chapter.NovelId, ct))!;
         var all = await repo.Scenes(chapterId, ct);
         var scenes = all.Where(x => request.SceneIds.Contains(x.Id)).ToArray();
         if (scenes.Length != request.SceneIds.Length) throw new WorkflowException(400, "Select distinct scenes from this chapter.");
@@ -19,14 +20,16 @@ public sealed class AdaptationService(IWorkspaceRepository repo, IAdaptationPlan
         if (request.TemplateId is { } templateId)
         {
             var template = await repo.Template(templateId, ct);
-            if (template is null || template.WorldId != story.WorldId) throw new WorkflowException(400, "Choose a template from this world.");
+            if (template is null || template.WorldId != novel.WorldId) throw new WorkflowException(400, "Choose a template from this space.");
             panels = JsonSerializer.Deserialize<PanelDraft[]>(template.ContentJson)!;
         }
         else panels = Enumerable.Range(1, request.PanelCount).Select(i => new PanelDraft { Title = $"Panel {i}" }).ToArray();
-        await ValidateAssets(story.WorldId, panels, ct);
+        await ValidateAssets(novel.WorldId, panels, ct);
         var plan = await planner.Plan(scenes, panels, ct);
-        var comic = new Comic { Id = Guid.NewGuid(), StoryId = story.Id, Title = request.Title.Trim() };
+        var comic = new Comic { Id = Guid.NewGuid(), WorldId = novel.WorldId, Title = request.Title.Trim() };
         repo.Add(comic);
+        foreach (var link in await repo.LinksFrom("novel", novel.Id, ct))
+            repo.Add(new Link { Id = Guid.NewGuid(), WorldId = link.WorldId, FromKind = "comic", FromId = comic.Id, ToKind = link.ToKind, ToId = link.ToId });
         var number = 0;
         foreach (var item in plan)
         {
@@ -50,11 +53,11 @@ public sealed class AdaptationService(IWorkspaceRepository repo, IAdaptationPlan
     public async Task<ComicWorkspace> Workspace(Guid comicId, CancellationToken ct)
     {
         var comic = await repo.Comic(comicId, ct) ?? throw new WorkflowException(404, "Comic not found.");
-        var story = (await repo.Story(comic.StoryId, ct))!;
+        var spaceName = await repo.SpaceName(comic.WorldId, ct) ?? "";
         var pages = await repo.Pages(comic.Id, ct);
         var result = new List<EditablePage>();
         foreach (var page in pages) result.Add(await ReadPage(page, ct));
-        return new(comic.Id, story.WorldId, comic.Title, story.Title, result);
+        return new(comic.Id, comic.WorldId, comic.Title, comic.CoverAssetId, spaceName, result);
     }
     private async Task<EditablePage> ReadPage(ComicPage page, CancellationToken ct)
     {
@@ -90,8 +93,7 @@ public sealed class AdaptationService(IWorkspaceRepository repo, IAdaptationPlan
         var page = await repo.Page(id, ct) ?? throw new WorkflowException(404, "Page not found.");
         if (page.Revision != request.Revision) throw new WorkflowException(409, "This page changed elsewhere. Copy your changes before reloading.");
         var comic = (await repo.Comic(page.ComicId, ct))!;
-        var story = (await repo.Story(comic.StoryId, ct))!;
-        await ValidateAssets(story.WorldId, request.Panels, ct);
+        await ValidateAssets(comic.WorldId, request.Panels, ct);
         var old = await repo.Panels(page.Id, ct);
         repo.RemoveLayers(await repo.Layers(old.Select(x => x.Id).ToArray(), ct));
         repo.RemovePanels(old);
@@ -143,10 +145,9 @@ public sealed class AdaptationService(IWorkspaceRepository repo, IAdaptationPlan
     {
         var page = await repo.Page(pageId, ct) ?? throw new WorkflowException(404, "Page not found.");
         var comic = (await repo.Comic(page.ComicId, ct))!;
-        var story = (await repo.Story(comic.StoryId, ct))!;
         if (page.Revision != revision) throw new WorkflowException(409, "This page changed elsewhere. Reload before saving its template.");
         var content = await ReadPage(page, ct);
-        var template = new PageTemplate { Id = Guid.NewGuid(), WorldId = story.WorldId, Name = name.Trim(), ContentJson = JsonSerializer.Serialize(content.Panels) };
+        var template = new PageTemplate { Id = Guid.NewGuid(), WorldId = comic.WorldId, Name = name.Trim(), ContentJson = JsonSerializer.Serialize(content.Panels) };
         repo.Add(template); await repo.Save(ct);
         return new(template.Id, template.WorldId, template.Name, content.Panels.Length);
     }

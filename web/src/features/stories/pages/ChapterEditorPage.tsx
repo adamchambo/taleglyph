@@ -15,7 +15,9 @@ function ChapterEditor({ data }: { data: ChapterWorkspace }) {
   useUnsavedChanges(dirty.length > 0);
   return (
     <>
-      <Link to={`/stories/${data.story.id}/novel`}>← {data.story.title}</Link>
+      <Link to={`/spaces/${data.novel.spaceId}/novels/${data.novel.id}`}>
+        ← {data.novel.title}
+      </Link>
       <div className="page-heading">
         <div>
           <p className="eyebrow">Chapter {data.chapter.order}</p>

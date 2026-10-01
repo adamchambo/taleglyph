@@ -31,6 +31,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<Talechemy.Api.Providers.Adaptation.IAdaptationPlanner, Talechemy.Api.Providers.Adaptation.ManualAdaptationPlanner>();
         services.AddScoped<ILibraryRepository, LibraryRepository>();
         services.AddScoped<LibraryService>();
+        services.AddScoped<ISpaceRepository, SpaceRepository>();
+        services.AddScoped<SpaceService>();
         return services;
     }
 }

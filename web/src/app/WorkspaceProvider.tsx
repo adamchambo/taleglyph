@@ -8,6 +8,33 @@ import {
   type RecentWork,
 } from "./workspaceContext";
 import { readPreference, writePreference } from "../lib/preferences";
+const uuid = "[a-f0-9-]{36}";
+const recentLabels: [RegExp, string][] = [
+  [new RegExp(`^/spaces/${uuid}/stories/${uuid}$`), "Story"],
+  [new RegExp(`^/spaces/${uuid}/novels/${uuid}$`), "Novel"],
+  [new RegExp(`^/chapters/${uuid}$`), "Chapter editor"],
+  [new RegExp(`^/comics/${uuid}$`), "Comic editor"],
+  [
+    new RegExp(
+      `^/spaces/${uuid}/(stories|works|world|characters|notes|timeline|assets)$`,
+    ),
+    "",
+  ],
+];
+const sectionLabels: Record<string, string> = {
+  stories: "Stories",
+  works: "Novels & comics",
+  world: "World",
+  characters: "Characters",
+  notes: "Notes",
+  timeline: "Timeline",
+  assets: "Assets",
+};
+function recentLabel(path: string) {
+  const match = recentLabels.find(([pattern]) => pattern.test(path));
+  if (!match) return null;
+  return match[1] || sectionLabels[path.split("/").at(-1)!];
+}
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [library, setLibrary] = useState<LibrarySnapshot | null>(null);
@@ -22,16 +49,18 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   );
   const [resolved, setResolved] = useState<{
     key: string;
-    storyId: string;
+    spaceId: string;
   } | null>(null);
-  const direct =
-    location.pathname.match(/^\/stories\/([a-f0-9-]{36})(?:\/|$)/)?.[1] ??
-    new URLSearchParams(location.search).get("story");
-  const legacy = location.pathname.match(
-    /^\/(chapters|comics)\/([a-f0-9-]{36})$/,
+  const spaceMatch = location.pathname.match(
+    new RegExp(`^/(?:spaces|worlds)/(${uuid})(?:/stories/(${uuid}))?`),
   );
-  const legacyKey = legacy
-    ? `${legacy[1] === "chapters" ? "chapter" : "comic"}/${legacy[2]}`
+  const direct =
+    spaceMatch?.[1] ?? new URLSearchParams(location.search).get("space");
+  const work = location.pathname.match(
+    new RegExp(`^/(chapters|comics)/(${uuid})$`),
+  );
+  const workKey = work
+    ? `${work[1] === "chapters" ? "chapter" : "comic"}/${work[2]}`
     : "";
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -64,67 +93,49 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     return () => abort.abort();
   }, [location.pathname]);
   useEffect(() => {
-    if (!legacyKey) return;
+    if (!workKey) return;
     const controller = new AbortController();
-    const [kind, id] = legacyKey.split("/");
+    const [kind, id] = workKey.split("/");
     libraryApi
       .context(kind, id, controller.signal)
-      .then((result) =>
-        setResolved({ key: legacyKey, storyId: result.storyId }),
-      )
+      .then((result) => setResolved({ key: workKey, spaceId: result.spaceId }))
       .catch(() => {});
     return () => controller.abort();
-  }, [legacyKey]);
-  const storyId =
-    direct ?? (resolved?.key === legacyKey ? resolved.storyId : null);
-  const story = library?.stories.find((s) => s.id === storyId) ?? null;
-  const activeStoryId = story?.id;
+  }, [workKey]);
+  const spaceId =
+    direct ?? (resolved?.key === workKey ? resolved.spaceId : null);
+  const space = library?.spaces.find((s) => s.id === spaceId) ?? null;
+  const story =
+    library?.stories.find(
+      (s) => s.id === spaceMatch?.[2] && s.spaceId === space?.id,
+    ) ?? null;
+  const activeSpaceId = space?.id;
   useEffect(() => {
-    if (
-      !activeStoryId ||
-      (!legacyKey &&
-        !/\/(novel|comic|characters|assets|plan|world|notes)$/.test(
-          location.pathname,
-        ))
-    )
-      return;
-    const label = legacyKey.startsWith("chapter")
-      ? "Chapter editor"
-      : legacyKey.startsWith("comic")
-        ? "Comic editor"
-        : location.pathname.split("/").at(-1)!;
+    const label = recentLabel(location.pathname);
+    if (!activeSpaceId || !label) return;
     const entry = {
       path: location.pathname + location.search,
-      label: label.charAt(0).toUpperCase() + label.slice(1),
+      label,
       visitedAt: new Date().toISOString(),
     };
     setRecent((current) => {
-      const next = { ...current, [activeStoryId]: entry };
+      const next = { ...current, [activeSpaceId]: entry };
       writePreference("recent", next);
       return next;
     });
-  }, [activeStoryId, legacyKey, location.pathname, location.search]);
+  }, [activeSpaceId, location.pathname, location.search]);
   function upsert(value: StoryCard) {
-    setLibrary((current) => {
-      if (!current)
-        return {
-          stories: [value],
-          spaces: [
-            { id: value.spaceId, name: value.spaceName, description: "" },
-          ],
-          series: [],
-        };
-      return {
-        ...current,
-        stories: [value, ...current.stories.filter((s) => s.id !== value.id)],
-        spaces: current.spaces.some((s) => s.id === value.spaceId)
-          ? current.spaces
-          : [
-              ...current.spaces,
-              { id: value.spaceId, name: value.spaceName, description: "" },
+    setLibrary((current) =>
+      current
+        ? {
+            ...current,
+            stories: [
+              value,
+              ...current.stories.filter((s) => s.id !== value.id),
             ],
-      };
-    });
+          }
+        : current,
+    );
   }
   function setNav(value: NavigationMode) {
     setNavState(value);
@@ -134,6 +145,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     <WorkspaceContext.Provider
       value={{
         library,
+        space,
         story,
         loading,
         error,

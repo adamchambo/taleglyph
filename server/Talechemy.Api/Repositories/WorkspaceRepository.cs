@@ -4,12 +4,13 @@ using Talechemy.Api.Repositories.Interfaces;
 using Talechemy.Api.Models.Stories;
 using Talechemy.Api.Models.Comics;
 using Talechemy.Api.Models.Assets;
+using Talechemy.Api.Models.World;
 namespace Talechemy.Api.Repositories;
 
 public sealed class WorkspaceRepository(TalechemyDbContext db) : IWorkspaceRepository
 {
     public Task<bool> WorldExists(Guid id, CancellationToken ct) => db.Worlds.AnyAsync(x => x.Id == id, ct);
-    public Task<Story?> Story(Guid id, CancellationToken ct) => db.Stories.SingleOrDefaultAsync(x => x.Id == id, ct);
+    public Task<string?> SpaceName(Guid id, CancellationToken ct) => db.Worlds.Where(x => x.Id == id).Select(x => x.Name).SingleOrDefaultAsync(ct);
     public Task<Novel?> Novel(Guid id, CancellationToken ct) => db.Novels.SingleOrDefaultAsync(x => x.Id == id, ct);
     public Task<Chapter[]> Chapters(Guid novelId, CancellationToken ct) => db.Chapters.AsNoTracking().Where(x => x.NovelId == novelId).OrderBy(x => x.Order).ToArrayAsync(ct);
     public Task<Chapter?> Chapter(Guid id, CancellationToken ct) => db.Chapters.SingleOrDefaultAsync(x => x.Id == id, ct);
@@ -26,12 +27,15 @@ public sealed class WorkspaceRepository(TalechemyDbContext db) : IWorkspaceRepos
     public Task<PageTemplate[]> Templates(Guid worldId, CancellationToken ct) => db.PageTemplates.Where(x => x.WorldId == worldId).OrderBy(x => x.Name).ToArrayAsync(ct);
     public Task<Asset?> Asset(Guid id, CancellationToken ct) => db.Assets.SingleOrDefaultAsync(x => x.Id == id, ct);
     public Task<int> CountAssets(Guid worldId, Guid[] ids, CancellationToken ct) => db.Assets.CountAsync(x => x.WorldId == worldId && ids.Contains(x.Id) && x.ImageFileName != null, ct);
+    public Task<Link[]> LinksFrom(string kind, Guid id, CancellationToken ct) => db.Links.AsNoTracking().Where(x => x.FromKind == kind && x.FromId == id).ToArrayAsync(ct);
     public void Add<T>(T entity) where T : class => db.Add(entity);
     public void RemoveLayers(IEnumerable<Layer> layers) => db.Layers.RemoveRange(layers);
     public void RemovePanels(IEnumerable<Panel> panels) => db.Panels.RemoveRange(panels);
     public Task Save(CancellationToken ct)
     {
-        foreach(var entry in db.ChangeTracker.Entries<Story>()) entry.Entity.UpdatedAt=DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
+        foreach (var entry in db.ChangeTracker.Entries<Novel>()) entry.Entity.UpdatedAt = now;
+        foreach (var entry in db.ChangeTracker.Entries<Comic>()) entry.Entity.UpdatedAt = now;
         return db.SaveChangesAsync(ct);
     }
 }

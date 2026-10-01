@@ -1,14 +1,15 @@
-export type Section =
-  | "overview"
-  | "notes"
-  | "characters"
-  | "world"
-  | "plan"
-  | "novel"
-  | "comic"
-  | "assets";
-export type SpaceSummary = { id: string; name: string; description: string };
-export type SeriesSummary = { id: string; spaceId: string; name: string };
+export type SpaceCard = {
+  id: string;
+  name: string;
+  description: string;
+  coverAssetId: string | null;
+  storyCount: number;
+  novelCount: number;
+  comicCount: number;
+  characterCount: number;
+  assetCount: number;
+  noteCount: number;
+};
 export type StoryCard = {
   id: string;
   spaceId: string;
@@ -16,83 +17,131 @@ export type StoryCard = {
   title: string;
   overview: string;
   tags: string[];
-  seriesId: string | null;
-  seriesName: string | null;
-  coverAssetId: string | null;
   updatedAt: string;
-  startingSection: Section;
   revision: number;
-  chapterCount: number;
-  comicCount: number;
-  characterCount: number;
-  assetCount: number;
-  novelCount: number;
+  arcCount: number;
 };
 export type LibrarySnapshot = {
+  spaces: SpaceCard[];
   stories: StoryCard[];
-  spaces: SpaceSummary[];
-  series: SeriesSummary[];
 };
 export type StorySetup = {
   title: string;
   overview: string;
-  spaceId: string | null;
-  newSpaceName: string | null;
+  spaceId: string;
   tags: string[];
-  startingSection: Section;
-  coverAssetId: string | null;
-  seriesId: string | null;
   revision: number;
 };
-export const sections: {
-  id: Section;
+export type WorkKind = "novel" | "comic";
+export type WorkCard = {
+  id: string;
+  kind: WorkKind;
+  spaceId: string;
+  title: string;
+  coverAssetId: string | null;
+  updatedAt: string;
+  partCount: number;
+};
+export type SpaceWorks = { novels: WorkCard[]; comics: WorkCard[] };
+export type Arc = {
+  id: string;
+  storyId: string;
+  title: string;
+  summary: string;
+  order: number;
+};
+export type LinkSource = WorkKind | "note";
+export type LinkTarget = "story" | "arc";
+export type StoryLink = {
+  id: string;
+  fromKind: LinkSource;
+  fromId: string;
+  toKind: LinkTarget;
+  toId: string;
+};
+export type Note = {
+  id: string;
+  spaceId: string;
+  title: string;
+  content: string;
+  updatedAt: string;
+};
+export type SpaceSection =
+  | "overview"
+  | "stories"
+  | "works"
+  | "world"
+  | "characters"
+  | "notes"
+  | "timeline"
+  | "assets";
+export const spaceSections: {
+  id: SpaceSection;
   label: string;
+  icon: string;
   description: string;
-  future?: boolean;
 }[] = [
   {
     id: "overview",
-    label: "Story home",
-    description: "Your story at a glance",
+    label: "Space home",
+    icon: "overview",
+    description: "Everything in this space at a glance",
   },
   {
-    id: "notes",
-    label: "Notes & tasks",
-    description: "Catch a thought. Give it somewhere to grow.",
-    future: true,
+    id: "stories",
+    label: "Stories",
+    icon: "plan",
+    description: "What happens, told arc by arc.",
   },
   {
-    id: "characters",
-    label: "Characters",
-    description: "Meet the people who make your story.",
+    id: "works",
+    label: "Novels & comics",
+    icon: "novel",
+    description: "The books and comics that tell those stories.",
   },
   {
     id: "world",
     label: "World",
+    icon: "world",
     description: "Places, lore and the rules of this world.",
   },
   {
-    id: "plan",
-    label: "Story plan",
-    description: "Find the shape of your story, beat by beat.",
-    future: true,
+    id: "characters",
+    label: "Characters",
+    icon: "characters",
+    description: "The people who move through every story here.",
   },
   {
-    id: "novel",
-    label: "Novel",
-    description: "Turn your ideas into chapters and scenes.",
+    id: "notes",
+    label: "Notes",
+    icon: "notes",
+    description: "Loose threads, linked to the stories they belong to.",
   },
   {
-    id: "comic",
-    label: "Comic",
-    description: "Tell the story in panels, pages and images.",
+    id: "timeline",
+    label: "Timeline",
+    icon: "clock",
+    description: "One timeline for every story in this space.",
   },
   {
     id: "assets",
     label: "Assets",
-    description: "Your artwork, references and reusable pieces.",
+    icon: "assets",
+    description: "Artwork, references and reusable pieces.",
   },
 ];
-export function sectionPath(id: string, section: Section) {
-  return `/stories/${id}${section === "overview" ? "" : `/${section}`}`;
+export function spacePath(spaceId: string, section: SpaceSection) {
+  return `/spaces/${spaceId}${section === "overview" ? "" : `/${section}`}`;
+}
+export function storyPath(story: { id: string; spaceId: string }) {
+  return `/spaces/${story.spaceId}/stories/${story.id}`;
+}
+export function workPath(work: {
+  id: string;
+  kind: WorkKind;
+  spaceId: string;
+}) {
+  return work.kind === "novel"
+    ? `/spaces/${work.spaceId}/novels/${work.id}`
+    : `/comics/${work.id}`;
 }

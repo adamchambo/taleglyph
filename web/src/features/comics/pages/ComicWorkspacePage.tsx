@@ -9,6 +9,9 @@ import { assetApi } from "../../assets/api/assetApi";
 import type { Asset } from "../../assets/types";
 import type { ComicWorkspace } from "../types";
 import { PageEditor } from "../components/PageEditor";
+import { CoverageEditor } from "../../library/components/CoverageEditor";
+import { WorkDetailsForm } from "../../library/components/WorkDetailsForm";
+import { useStoryGraph } from "../../library/hooks/useStoryGraph";
 function Studio({
   initial,
   initialAssets,
@@ -16,33 +19,55 @@ function Studio({
   initial: ComicWorkspace;
   initialAssets: Asset[];
 }) {
-  const { story } = useWorkspace();
+  const { library } = useWorkspace();
+  const graph = useStoryGraph(initial.worldId);
   const [comic, setComic] = useState(initial);
   const [assets, setAssets] = useState(initialAssets);
   const [selected, setSelected] = useState(0);
   const [dirty, setDirty] = useState(false);
-  useUnsavedChanges(dirty);
+  const [detailsDirty, setDetailsDirty] = useState(false);
+  useUnsavedChanges(dirty || detailsDirty);
   const page = comic.pages[selected];
   return (
     <>
-      <Link
-        to={
-          story
-            ? `/stories/${story.id}/comic`
-            : `/comics?world=${comic.worldId}`
-        }
-      >
-        ← Comic studio
-      </Link>
+      <Link to={`/spaces/${comic.worldId}/works`}>← Novels & comics</Link>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">{comic.storyTitle} / Comic adaptation</p>
+          <p className="eyebrow">{comic.spaceName} / Comic</p>
           <h1>{comic.title}</h1>
         </div>
         <span className="badge">
           {comic.pages.length} {comic.pages.length === 1 ? "page" : "pages"}
         </span>
       </div>
+      <details className="work-settings">
+        <summary>What this comic tells, title and cover</summary>
+        <ResourceState
+          loading={graph.loading}
+          error={graph.error}
+          retry={graph.reload}
+        />
+        {graph.data ? (
+          <CoverageEditor
+            label="What this comic tells"
+            fromKind="comic"
+            fromId={comic.id}
+            stories={
+              library?.stories.filter((s) => s.spaceId === comic.worldId) ?? []
+            }
+            arcs={graph.data.arcs}
+            initial={graph.data.links}
+          />
+        ) : null}
+        <WorkDetailsForm
+          kind="comic"
+          id={comic.id}
+          spaceId={comic.worldId}
+          initial={{ title: comic.title, coverAssetId: comic.coverAssetId }}
+          onSaved={(details) => setComic((c) => ({ ...c, ...details }))}
+          onDirty={setDetailsDirty}
+        />
+      </details>
       <nav className="page-tabs" aria-label="Comic pages">
         {comic.pages.map((p, i) => (
           <button

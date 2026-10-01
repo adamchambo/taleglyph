@@ -10,10 +10,6 @@ namespace Talechemy.Api.Repositories;
 
 public sealed class ComicRepository(TalechemyDbContext db) : IComicRepository
 {
-    public async Task<IReadOnlyList<Comic>> GetComicsAsync(Guid storyId, CancellationToken ct = default)
-    {
-        return await db.Comics.AsNoTracking().Where(x => x.StoryId == storyId).OrderBy(x => x.Id).ToArrayAsync(ct);
-    }
     public async Task<Comic?> GetComicAsync(Guid id, CancellationToken ct = default)
     {
         return await db.Comics.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct);

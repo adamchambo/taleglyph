@@ -6,7 +6,6 @@ namespace Talechemy.Api.Services;
 
 public sealed class ComicService(IComicRepository repository) : IComicService
 {
-    public async Task<IReadOnlyList<ComicResponse>> GetComicsAsync(Guid storyId, CancellationToken ct = default) => (await repository.GetComicsAsync(storyId, ct)).Select(x => x.ToResponse()).ToArray();
     public async Task<ComicResponse?> GetComicAsync(Guid id, CancellationToken ct = default) => (await repository.GetComicAsync(id, ct))?.ToResponse();
     public async Task<IReadOnlyList<ComicPageResponse>> GetPagesAsync(Guid comicId, CancellationToken ct = default) => (await repository.GetPagesAsync(comicId, ct)).Select(x => x.ToResponse()).ToArray();
     public async Task<ComicPageResponse?> GetPageAsync(Guid id, CancellationToken ct = default) => (await repository.GetPageAsync(id, ct))?.ToResponse();

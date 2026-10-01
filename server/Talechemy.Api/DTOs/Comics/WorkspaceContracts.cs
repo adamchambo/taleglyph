@@ -34,7 +34,7 @@ public sealed class LayerDraft
 public sealed record TemplateResponse(Guid Id, Guid WorldId, string Name, int PanelCount);
 public sealed record SourceReference(Guid SceneId, Guid ChapterId, string ChapterTitle, string OriginalTitle, string OriginalProse, int SourceRevision, string CurrentTitle, string CurrentProse, int CurrentRevision, bool NeedsReview);
 public sealed record EditablePage(Guid Id, int Number, int Revision, PanelDraft[] Panels, SourceReference? Source);
-public sealed record ComicWorkspace(Guid Id, Guid WorldId, string Title, string StoryTitle, IReadOnlyList<EditablePage> Pages);
+public sealed record ComicWorkspace(Guid Id, Guid WorldId, string Title, Guid? CoverAssetId, string SpaceName, IReadOnlyList<EditablePage> Pages);
 
 public sealed class TemplateRequest
 {

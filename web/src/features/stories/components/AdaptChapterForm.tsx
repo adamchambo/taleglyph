@@ -17,8 +17,8 @@ export function AdaptChapterForm({
   const navigate = useNavigate();
   const templates = useResource(
     useCallback(
-      (s: AbortSignal) => comicApi.templates(data.story.worldId, s),
-      [data.story.worldId],
+      (s: AbortSignal) => comicApi.templates(data.novel.spaceId, s),
+      [data.novel.spaceId],
     ),
   );
   const [selection, setSelection] = useState<string[]>(scenes.map((s) => s.id));

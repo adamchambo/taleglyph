@@ -1,4 +1,3 @@
-import { useWorkspace } from "../../../app/workspaceContext";
 import { useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useResource } from "../../../hooks/useResource";
@@ -15,7 +14,6 @@ export function WorldDetailPage({
   charactersOnly?: boolean;
 }) {
   const params = useParams();
-  const { story } = useWorkspace();
   const worldId = scopedWorldId ?? params.worldId ?? "";
   const world = useResource(
     useCallback(
@@ -26,7 +24,9 @@ export function WorldDetailPage({
   const characters = useCharacters(worldId);
   return (
     <section>
-      {!charactersOnly ? <Link to="/worlds">← All worlds</Link> : null}
+      {!charactersOnly ? (
+        <Link to={`/spaces/${worldId}/world`}>← World</Link>
+      ) : null}
       <ResourceState
         loading={world.loading}
         error={world.error}
@@ -39,25 +39,10 @@ export function WorldDetailPage({
           <p className="intro">{world.data.description}</p>
           {!charactersOnly ? (
             <div className="toolbar">
-              <Link
-                className="button"
-                to={
-                  story
-                    ? `/stories/${story.id}/novel`
-                    : `/stories?world=${worldId}`
-                }
-              >
-                Open manuscripts
+              <Link className="button" to={`/spaces/${worldId}/works`}>
+                Novels & comics
               </Link>
-              <Link
-                to={
-                  story
-                    ? `/stories/${story.id}/assets`
-                    : `/assets?world=${worldId}`
-                }
-              >
-                Browse assets →
-              </Link>
+              <Link to={`/spaces/${worldId}/assets`}>Browse assets →</Link>
             </div>
           ) : null}
           {!charactersOnly ? <h2>Characters</h2> : null}

@@ -1,13 +1,8 @@
-export type Story = {
-  id: string;
-  worldId: string;
-  title: string;
-  synopsis: string;
-};
 export type Novel = {
   id: string;
-  storyId: string;
+  spaceId: string;
   title: string;
+  coverAssetId: string | null;
   chapterCount: number;
 };
 export type NovelWorkspace = {
@@ -16,7 +11,7 @@ export type NovelWorkspace = {
 };
 export type Chapter = {
   id: string;
-  storyId: string;
+  novelId: string;
   title: string;
   order: number;
 };
@@ -30,6 +25,6 @@ export type Scene = {
 };
 export type ChapterWorkspace = {
   chapter: Chapter;
-  story: Story;
+  novel: Novel;
   scenes: Scene[];
 };

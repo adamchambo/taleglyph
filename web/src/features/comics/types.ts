@@ -29,12 +29,12 @@ export type Page = {
   panels: Panel[];
   source: Source | null;
 };
-export type Comic = { id: string; storyId: string; title: string };
 export type ComicWorkspace = {
   id: string;
   worldId: string;
   title: string;
-  storyTitle: string;
+  coverAssetId: string | null;
+  spaceName: string;
   pages: Page[];
 };
 export type PageTemplate = {

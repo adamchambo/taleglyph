@@ -1,8 +1,6 @@
 import { apiClient } from "../../../lib/apiClient";
-import type { Comic, ComicWorkspace, Page, PageTemplate } from "../types";
+import type { ComicWorkspace, Page, PageTemplate } from "../types";
 export const comicApi = {
-  list: (storyId: string, signal?: AbortSignal) =>
-    apiClient<Comic[]>(`/comics?storyId=${storyId}`, { signal }),
   workspace: (id: string, signal?: AbortSignal) =>
     apiClient<ComicWorkspace>(`/adaptations/comics/${id}`, { signal }),
   templates: (worldId: string, signal?: AbortSignal) =>

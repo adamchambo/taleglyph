@@ -6,8 +6,6 @@ namespace Talechemy.Api.Controllers;
 [ApiController, Route("api/manuscripts")]
 public sealed class ManuscriptsController(AuthoringService service) : ControllerBase
 {
-    [HttpPost("stories")]
-    public async Task<IActionResult> Story(CreateStoryRequest request, CancellationToken ct) => Ok(await service.CreateStory(request, ct));
     [HttpGet("novels/{id:guid}")]
     public async Task<IActionResult> Novel(Guid id, CancellationToken ct) => Ok(await service.GetNovel(id, ct));
     [HttpPost("novels/{id:guid}/chapters")]
