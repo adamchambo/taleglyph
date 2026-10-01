@@ -1,4 +1,11 @@
-import { useCallback, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type PointerEvent,
+} from "react";
 import { Link, useParams } from "react-router-dom";
 import { useWorkspace } from "../../../app/workspaceContext";
 import { Button } from "../../../components/ui/Button";
@@ -17,6 +24,14 @@ import {
   type WorkCard,
 } from "../types";
 type ArcDraft = { title: string; summary: string };
+type RailDrag = {
+  index: number;
+  destination: number;
+  height: number;
+  tops: number[];
+  heights: number[];
+};
+type RailGesture = RailDrag & { pointerId: number };
 function ArcForm({
   initial = { title: "", summary: "" },
   action,
@@ -102,6 +117,21 @@ function Arcs({ story, initial }: { story: StoryCard; initial: Arc[] }) {
   const [creating, toggleCreating, closeCreating] = useOpenWhenEmpty(
     arcs.length === 0,
   );
+  const [rail, setRail] = useState<RailDrag | null>(null);
+  const listRef = useRef<HTMLOListElement>(null);
+  const gesture = useRef<RailGesture | null>(null);
+  const arcsRef = useRef(arcs);
+  arcsRef.current = arcs;
+  useEffect(() => {
+    if (!rail) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      gesture.current = null;
+      setRail(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [rail]);
   async function run(action: () => Promise<void>) {
     setBusy(true);
     setError("");
@@ -113,10 +143,110 @@ function Arcs({ story, initial }: { story: StoryCard; initial: Arc[] }) {
       setBusy(false);
     }
   }
+  function reorder(ids: string[]) {
+    const previous = arcsRef.current;
+    const order = new Map(ids.map((id, index) => [id, index]));
+    setArcs(
+      [...previous]
+        .sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))
+        .map((arc, index) => ({ ...arc, order: index + 1 })),
+    );
+    void run(async () => {
+      try {
+        setArcs(await spaceApi.reorderArcs(story.id, ids));
+      } catch (error) {
+        setArcs(previous);
+        throw error;
+      }
+    });
+  }
   function move(index: number, by: -1 | 1) {
     const ids = arcs.map((a) => a.id);
     [ids[index], ids[index + by]] = [ids[index + by], ids[index]];
-    void run(async () => setArcs(await spaceApi.reorderArcs(story.id, ids)));
+    reorder(ids);
+  }
+  function cancelRail() {
+    gesture.current = null;
+    setRail(null);
+  }
+  function placeOnRail(
+    index: number,
+    destination: number,
+    tops: number[],
+    heights: number[],
+  ) {
+    if (destination === index) return 0;
+    if (destination > index) {
+      return (
+        tops[destination] + heights[destination] - heights[index] - tops[index]
+      );
+    }
+    return tops[destination] - tops[index];
+  }
+  function beginRail(event: PointerEvent<HTMLButtonElement>, index: number) {
+    if (event.button !== 0 || busy || editing || arcs.length < 2) return;
+    const list = listRef.current;
+    if (!list) return;
+    const listTop = list.getBoundingClientRect().top;
+    const rows = [...list.querySelectorAll<HTMLLIElement>(":scope > li")];
+    const rects = rows.map((row) => row.getBoundingClientRect());
+    const tops = rects.map((rect) => rect.top - listTop);
+    const heights = rects.map((rect) => rect.height);
+    const next = {
+      index,
+      destination: index,
+      height: heights[index],
+      pointerId: event.pointerId,
+      tops,
+      heights,
+    };
+    gesture.current = next;
+    setRail(next);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  }
+  function moveRail(event: PointerEvent<HTMLButtonElement>) {
+    const current = gesture.current;
+    const list = listRef.current;
+    if (!current || !list || event.pointerId !== current.pointerId) return;
+    const pointer = event.clientY - list.getBoundingClientRect().top;
+    let destination = 0;
+    for (let i = 0; i < current.tops.length; i++) {
+      if (pointer >= current.tops[i] + current.heights[i] / 2) destination = i;
+    }
+    if (destination === current.destination) return;
+    const next = { ...current, destination };
+    gesture.current = next;
+    setRail(next);
+  }
+  function endRail(event: PointerEvent<HTMLButtonElement>) {
+    const current = gesture.current;
+    if (!current || event.pointerId !== current.pointerId) return;
+    gesture.current = null;
+    setRail(null);
+    if (current.destination === current.index) return;
+    const ids = arcsRef.current.map((arc) => arc.id);
+    const [id] = ids.splice(current.index, 1);
+    ids.splice(current.destination, 0, id);
+    reorder(ids);
+  }
+  function shift(index: number) {
+    if (!rail) return 0;
+    if (index === rail.index)
+      return placeOnRail(rail.index, rail.destination, rail.tops, rail.heights);
+    if (
+      rail.destination > rail.index &&
+      index > rail.index &&
+      index <= rail.destination
+    )
+      return -rail.height;
+    if (
+      rail.destination < rail.index &&
+      index >= rail.destination &&
+      index < rail.index
+    )
+      return rail.height;
+    return 0;
   }
   function remove(arc: Arc) {
     if (
@@ -163,67 +293,101 @@ function Arcs({ story, initial }: { story: StoryCard; initial: Arc[] }) {
         </div>
       ) : null}
       {arcs.length ? (
-        <ol className="arc-list">
-          {arcs.map((arc, i) => (
-            <li key={arc.id}>
-              <span className="arc-number">
-                {String(arc.order).padStart(2, "0")}
-              </span>
-              {editing === arc.id ? (
-                <ArcForm
-                  initial={arc}
-                  action="Save arc"
-                  onCancel={() => setEditing(null)}
-                  onSubmit={async (draft) => {
-                    const saved = await spaceApi.updateArc(arc.id, draft);
-                    setArcs((items) =>
-                      items.map((a) => (a.id === saved.id ? saved : a)),
-                    );
-                    setEditing(null);
+        <ol
+          ref={listRef}
+          className={rail ? "arc-list is-reordering" : "arc-list"}
+        >
+          {arcs.map((arc, i) => {
+            const offset = shift(i);
+            return (
+              <li
+                key={arc.id}
+                className={rail?.index === i ? "arc-dragging" : undefined}
+                style={
+                  offset ? { transform: `translateY(${offset}px)` } : undefined
+                }
+              >
+                <button
+                  type="button"
+                  className="arc-grip"
+                  aria-label={`Reorder ${arc.title}`}
+                  disabled={
+                    busy ||
+                    !!editing ||
+                    arcs.length < 2 ||
+                    (rail !== null && rail.index !== i)
+                  }
+                  onPointerDown={(event) => beginRail(event, i)}
+                  onPointerMove={moveRail}
+                  onPointerUp={endRail}
+                  onPointerCancel={cancelRail}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") cancelRail();
                   }}
-                />
-              ) : (
-                <>
-                  <div>
-                    <strong>{arc.title}</strong>
-                    {arc.summary ? <p>{arc.summary}</p> : null}
-                  </div>
-                  <div className="arc-actions">
-                    <button
-                      className="icon-button"
-                      aria-label={`Move ${arc.title} up`}
-                      disabled={busy || i === 0}
-                      onClick={() => move(i, -1)}
-                    >
-                      ↑
-                    </button>
-                    <button
-                      className="icon-button"
-                      aria-label={`Move ${arc.title} down`}
-                      disabled={busy || i === arcs.length - 1}
-                      onClick={() => move(i, 1)}
-                    >
-                      ↓
-                    </button>
-                    <Button
-                      variant="secondary"
-                      disabled={busy}
-                      onClick={() => setEditing(arc.id)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      disabled={busy}
-                      onClick={() => remove(arc)}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </>
-              )}
-            </li>
-          ))}
+                >
+                  <Icon name="grip" size={16} />
+                </button>
+                <span className="arc-number">
+                  {String(arc.order).padStart(2, "0")}
+                </span>
+                {editing === arc.id ? (
+                  <ArcForm
+                    initial={arc}
+                    action="Save arc"
+                    onCancel={() => setEditing(null)}
+                    onSubmit={async (draft) => {
+                      const saved = await spaceApi.updateArc(arc.id, draft);
+                      setArcs((items) =>
+                        items.map((a) => (a.id === saved.id ? saved : a)),
+                      );
+                      setEditing(null);
+                    }}
+                  />
+                ) : (
+                  <>
+                    <div>
+                      <strong>{arc.title}</strong>
+                      {arc.summary ? <p>{arc.summary}</p> : null}
+                    </div>
+                    <div className="arc-actions">
+                      <button
+                        className="icon-button"
+                        aria-label={`Move ${arc.title} up`}
+                        disabled={busy || rail !== null || i === 0}
+                        onClick={() => move(i, -1)}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        className="icon-button"
+                        aria-label={`Move ${arc.title} down`}
+                        disabled={
+                          busy || rail !== null || i === arcs.length - 1
+                        }
+                        onClick={() => move(i, 1)}
+                      >
+                        ↓
+                      </button>
+                      <Button
+                        variant="secondary"
+                        disabled={busy || rail !== null}
+                        onClick={() => setEditing(arc.id)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="danger"
+                        disabled={busy || rail !== null}
+                        onClick={() => remove(arc)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </li>
+            );
+          })}
         </ol>
       ) : (
         <p className="muted">

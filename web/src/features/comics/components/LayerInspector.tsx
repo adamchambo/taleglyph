@@ -193,6 +193,7 @@ export function LayerInspector({
             <button
               className="text-button danger"
               onClick={() => {
+                if (!window.confirm("Remove this layer?")) return;
                 onChange({
                   ...panel,
                   layers: panel.layers.filter((_, i) => i !== layerIndex),

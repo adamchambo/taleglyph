@@ -42,22 +42,33 @@ const paths: Record<string, string[]> = {
   clock: ["M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0", "M12 7v5l3 2"],
   close: ["m5 5 14 14M5 19 19 5"],
 };
+const grip = [
+  [9, 5],
+  [15, 5],
+  [9, 12],
+  [15, 12],
+  [9, 19],
+  [15, 19],
+] as const;
 export function Icon({ name, size = 20 }: { name: string; size?: number }) {
+  const dotted = name === "grip";
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
+      fill={dotted ? "currentColor" : "none"}
+      stroke={dotted ? "none" : "currentColor"}
       strokeWidth="1.6"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      {(paths[name] ?? paths.spark).map((d, i) => (
-        <path key={i} d={d} />
-      ))}
+      {dotted
+        ? grip.map(([cx, cy]) => (
+            <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.35" />
+          ))
+        : (paths[name] ?? paths.spark).map((d, i) => <path key={i} d={d} />)}
     </svg>
   );
 }

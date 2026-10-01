@@ -51,6 +51,8 @@ export function CoverageEditor({
     });
   }
   function remove(link: StoryLink) {
+    const label = describeLink(link, stories, arcs);
+    if (!window.confirm(`Remove the link to “${label}”?`)) return;
     void run(async () => {
       await spaceApi.deleteLink(link.id);
       setLinks((items) => items.filter((l) => l.id !== link.id));

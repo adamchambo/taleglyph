@@ -5,12 +5,12 @@ export function Button({
   variant = "primary",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "danger";
 }) {
   return (
     <button
       type={type}
-      className={`button ${variant === "secondary" ? "secondary" : ""} ${className}`}
+      className={`button ${variant === "primary" ? "" : variant} ${className}`}
       {...props}
     />
   );

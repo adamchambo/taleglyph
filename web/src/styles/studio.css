@@ -94,6 +94,27 @@
   color: var(--text);
   border: 1px solid var(--border);
 }
+.studio-shell .button.danger {
+  background: #b42318;
+  color: #fff;
+  border: 1px solid #b42318;
+}
+.studio-shell .button.danger:hover:not(:disabled) {
+  background: #912018;
+  border-color: #912018;
+}
+[data-theme="dark"] .studio-shell .button.danger {
+  background: #c5453c;
+  color: #fff;
+  border-color: #c5453c;
+}
+[data-theme="dark"] .studio-shell .button.danger:hover:not(:disabled) {
+  background: #d4564c;
+  border-color: #d4564c;
+}
+[data-theme="dark"] .text-button.danger {
+  color: #ffb4ae;
+}
 .studio-shell input,
 .studio-shell textarea,
 .studio-shell select {
@@ -1267,12 +1288,53 @@ select.form-control {
   margin: 12px 0 18px;
 }
 .arc-list li {
+  position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   gap: 16px;
   align-items: start;
   padding: 16px 0;
   border-bottom: 1px solid var(--border);
+  transition: transform 160ms ease;
+}
+.arc-grip {
+  display: inline-flex;
+  align-self: start;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-top: -2px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: grab;
+  touch-action: none;
+}
+.arc-grip:hover:not(:disabled) {
+  background: var(--soft);
+  color: var(--text);
+}
+.arc-grip:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.arc-list.is-reordering {
+  cursor: grabbing;
+}
+.arc-list.is-reordering .arc-grip {
+  cursor: grabbing;
+}
+.arc-list li.arc-dragging {
+  z-index: 1;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  cursor: grabbing;
+}
+.arc-list li > .arc-form {
+  grid-column: 3 / -1;
 }
 .arc-list p {
   margin: 6px 0 0;
@@ -1424,10 +1486,13 @@ select.form-control {
 .link-chips button {
   border: 0;
   background: transparent;
-  color: inherit;
+  color: #9f2f28;
   padding: 0 4px;
   font-size: 15px;
   line-height: 1;
+}
+[data-theme="dark"] .link-chips button {
+  color: #ffb4ae;
 }
 .note-list {
   display: grid;
@@ -1448,7 +1513,7 @@ select.form-control {
 }
 @media (max-width: 760px) {
   .arc-list li {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto auto minmax(0, 1fr);
   }
   .arc-actions {
     grid-column: 1 / -1;

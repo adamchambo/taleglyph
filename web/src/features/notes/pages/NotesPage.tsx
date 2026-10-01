@@ -128,7 +128,7 @@ function NoteCard({
               <Button variant="secondary" onClick={() => setEditing(true)}>
                 Edit
               </Button>
-              <Button variant="secondary" onClick={remove}>
+              <Button variant="danger" onClick={remove}>
                 Delete
               </Button>
             </div>
