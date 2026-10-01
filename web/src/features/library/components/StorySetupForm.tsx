@@ -149,7 +149,7 @@ export function StorySetupForm({
               required
               autoFocus={!initial}
               maxLength={120}
-              placeholder="Aegis: Original"
+              placeholder="Ash and Meridian"
               value={draft.title}
               onChange={(e) => edit({ title: e.target.value })}
             />

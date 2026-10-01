@@ -84,7 +84,7 @@ export function SpaceSetupPage() {
                   required
                   autoFocus
                   maxLength={120}
-                  placeholder="The Aegis"
+                  placeholder="The Copper Orchard"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
