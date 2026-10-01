@@ -669,11 +669,25 @@
   min-height: 130px;
   line-height: 1.6;
 }
+.tag-field {
+  margin: 22px 0 12px;
+}
+.tag-field > .field-hint {
+  margin: 0 0 4px;
+}
+.tag-group + .tag-group {
+  margin-top: 16px;
+}
+.tag-group-label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 550;
+}
 .tag-choices {
   display: flex;
   gap: 7px;
   flex-wrap: wrap;
-  margin-top: 14px;
+  margin-top: 8px;
 }
 .tag-choices > button {
   background: var(--surface);

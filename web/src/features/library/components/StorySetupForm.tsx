@@ -1,6 +1,6 @@
 import { Button } from "../../../components/ui/Button";
 import { Input, Textarea, Select } from "../../../components/ui/Input";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useId, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWorkspace } from "../../../app/workspaceContext";
 import { useUnsavedChanges } from "../../../hooks/useUnsavedChanges";
@@ -15,19 +15,70 @@ import {
 } from "../types";
 import type { Asset } from "../../assets/types";
 import { AssetUploader } from "../../assets/components/AssetUploader";
-const suggested = [
+const genres = [
   "Fantasy",
   "Science fiction",
-  "Mystery",
-  "Romance",
-  "Historical",
+  "Action",
   "Adventure",
-  "Literary",
-  "Nonfiction",
+  "Horror",
+  "Mystery",
+  "Thriller",
+  "Romance",
+  "Drama",
+  "Comedy",
+  "Historical",
+  "Slice of life",
+];
+const tones = [
   "Hopeful",
   "Dark",
+  "Gritty",
+  "Eerie",
+  "Suspenseful",
+  "Tragic",
+  "Cozy",
   "Whimsical",
+  "Humorous",
+  "Romantic",
 ];
+function sameTag(a: string, b: string) {
+  return a.toLowerCase() === b.toLowerCase();
+}
+function groupChoices(defaults: string[], tags: string[]) {
+  return defaults.map((name) => tags.find((tag) => sameTag(tag, name)) ?? name);
+}
+function unmatchedTags(tags: string[]) {
+  return tags.filter(
+    (tag) =>
+      !genres.some((name) => sameTag(tag, name)) &&
+      !tones.some((name) => sameTag(tag, name)),
+  );
+}
+function TagChoices({
+  tags,
+  values,
+  onToggle,
+}: {
+  tags: string[];
+  values: string[];
+  onToggle: (value: string) => void;
+}) {
+  return (
+    <div className="tag-choices">
+      {values.map((value) => (
+        <Button
+          type="button"
+          key={value}
+          aria-pressed={tags.includes(value)}
+          onClick={() => onToggle(value)}
+          disabled={!tags.includes(value) && tags.length >= 12}
+        >
+          {value}
+        </Button>
+      ))}
+    </div>
+  );
+}
 export function StorySetupForm({
   initial,
   assets = [],
@@ -58,6 +109,10 @@ export function StorySetupForm({
   const [seriesName, setSeriesName] = useState("");
   const [seriesOptions, setSeriesOptions] = useState(library?.series ?? []);
   const [destination, setDestination] = useState<string | null>(null);
+  const genreLabelId = useId();
+  const toneLabelId = useId();
+  const savedLabelId = useId();
+  const savedTags = unmatchedTags(draft.tags);
   useUnsavedChanges(dirty && !saved);
   useEffect(() => {
     if (destination && !dirty) navigate(destination);
@@ -269,26 +324,52 @@ export function StorySetupForm({
                   ) : null}
                 </>
               ) : null}
-              <label>
-                Genre and tone{" "}
-                <span className="optional">
-                  Choose several, or add your own
-                </span>
-              </label>
-              <div className="tag-choices">
-                {[...new Set([...suggested, ...draft.tags])].map((t) => (
-                  <Button
-                    type="button"
-                    key={t}
-                    aria-pressed={draft.tags.includes(t)}
-                    onClick={() => tag(t)}
-                    disabled={
-                      !draft.tags.includes(t) && draft.tags.length >= 12
-                    }
+              <div className="tag-field">
+                <p className="field-hint">Choose several, or add your own.</p>
+                <div
+                  className="tag-group"
+                  role="group"
+                  aria-labelledby={genreLabelId}
+                >
+                  <p id={genreLabelId} className="tag-group-label">
+                    Genre
+                  </p>
+                  <TagChoices
+                    tags={draft.tags}
+                    values={groupChoices(genres, draft.tags)}
+                    onToggle={tag}
+                  />
+                </div>
+                <div
+                  className="tag-group"
+                  role="group"
+                  aria-labelledby={toneLabelId}
+                >
+                  <p id={toneLabelId} className="tag-group-label">
+                    Tone
+                  </p>
+                  <TagChoices
+                    tags={draft.tags}
+                    values={groupChoices(tones, draft.tags)}
+                    onToggle={tag}
+                  />
+                </div>
+                {savedTags.length > 0 ? (
+                  <div
+                    className="tag-group"
+                    role="group"
+                    aria-labelledby={savedLabelId}
                   >
-                    {t}
-                  </Button>
-                ))}
+                    <p id={savedLabelId} className="tag-group-label">
+                      On this story
+                    </p>
+                    <TagChoices
+                      tags={draft.tags}
+                      values={savedTags}
+                      onToggle={tag}
+                    />
+                  </div>
+                ) : null}
               </div>
               <div className="custom-tag">
                 <label className="sr-only" htmlFor="custom-tag">

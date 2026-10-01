@@ -6,31 +6,37 @@ export function Topbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const hasPreviousPage = (window.history.state?.idx ?? 0) > 0;
+  const isLibrary =
+    location.pathname === "/library" || location.pathname === "/";
   const fallback = story ? `/stories/${story.id}` : "/library";
   const canGoBack = hasPreviousPage || location.pathname !== fallback;
   return (
     <header className="studio-topbar">
-      <nav className="page-navigation" aria-label="Page navigation">
-        <button
-          className="icon-button"
-          aria-label="Go back"
-          title="Go back"
-          disabled={!canGoBack}
-          onClick={() => (hasPreviousPage ? navigate(-1) : navigate(fallback))}
-        >
-          <span className="back-arrow">
-            <Icon name="arrow" />
-          </span>
-        </button>
-        <Link
-          className="icon-button"
-          to="/library"
-          aria-label="Go to library"
-          title="Library"
-        >
-          <Icon name="library" />
-        </Link>
-      </nav>
+      {!isLibrary ? (
+        <nav className="page-navigation" aria-label="Page navigation">
+          <button
+            className="icon-button"
+            aria-label="Go back"
+            title="Go back"
+            disabled={!canGoBack}
+            onClick={() =>
+              hasPreviousPage ? navigate(-1) : navigate(fallback)
+            }
+          >
+            <span className="back-arrow">
+              <Icon name="arrow" />
+            </span>
+          </button>
+          <Link
+            className="icon-button"
+            to="/library"
+            aria-label="Go to library"
+            title="Library"
+          >
+            <Icon name="library" />
+          </Link>
+        </nav>
+      ) : null}
       <div className="context-breadcrumb">
         {story ? (
           <>
