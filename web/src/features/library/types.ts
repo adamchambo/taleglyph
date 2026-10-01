@@ -72,7 +72,8 @@ export type Note = {
 export type SpaceSection =
   | "overview"
   | "stories"
-  | "works"
+  | "novels"
+  | "graphic-novels"
   | "world"
   | "characters"
   | "notes"
@@ -97,10 +98,16 @@ export const spaceSections: {
     description: "What happens, told arc by arc.",
   },
   {
-    id: "works",
-    label: "Novels & graphic novels",
+    id: "novels",
+    label: "Novels",
     icon: "novel",
-    description: "Novels and graphic novels, kept as different works.",
+    description: "Written in chapters.",
+  },
+  {
+    id: "graphic-novels",
+    label: "Graphic novels",
+    icon: "comic",
+    description: "Drawn in pages.",
   },
   {
     id: "world",

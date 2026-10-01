@@ -27,7 +27,9 @@ function CastSummary({ world }: { world: World }) {
       setDraft(saved.castSummary);
       setEditing(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unable to save the cast summary.");
+      setError(
+        e instanceof Error ? e.message : "Unable to save the cast summary.",
+      );
     } finally {
       setBusy(false);
     }
@@ -73,7 +75,8 @@ function CastSummary({ world }: { world: World }) {
   return (
     <div className="cast-summary">
       <p className="intro">
-        {summary || "No cast summary yet. This is about the characters, not the story."}
+        {summary ||
+          "No cast summary yet. This is about the characters, not the story."}
       </p>
       <Button variant="secondary" onClick={() => setEditing(true)}>
         Edit summary
@@ -137,8 +140,14 @@ export function WorldDetailPage({
               <h1>{world.data.name}</h1>
               <p className="intro">{world.data.description}</p>
               <div className="toolbar">
-                <Link className="button" to={`/spaces/${worldId}/works`}>
-                  Novels & graphic novels
+                <Link className="button" to={`/spaces/${worldId}/novels`}>
+                  Novels
+                </Link>
+                <Link
+                  className="button secondary"
+                  to={`/spaces/${worldId}/graphic-novels`}
+                >
+                  Graphic novels
                 </Link>
                 <Link to={`/spaces/${worldId}/assets`}>Browse assets →</Link>
               </div>

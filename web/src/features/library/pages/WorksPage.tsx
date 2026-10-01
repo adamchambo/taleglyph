@@ -12,6 +12,7 @@ import { SpaceRequired } from "../components/SpaceRequired";
 import { StoryArtwork } from "../components/StoryArtwork";
 import { useStoryGraph } from "../hooks/useStoryGraph";
 import { workPath, type WorkCard, type WorkKind } from "../types";
+
 function WorkGrid({
   works,
   coverage,
@@ -53,7 +54,28 @@ function WorkGrid({
     </div>
   );
 }
-export function WorksPage() {
+
+const copy: Record<
+  WorkKind,
+  { title: string; intro: string; action: string; empty: string }
+> = {
+  novel: {
+    title: "Novels",
+    intro:
+      "Written in chapters. A novel can tell one story, several, or part of an arc.",
+    action: "New novel",
+    empty: "No novels yet.",
+  },
+  comic: {
+    title: "Graphic novels",
+    intro:
+      "Drawn in pages. A graphic novel can tell one story, several, or part of an arc.",
+    action: "New graphic novel",
+    empty: "No graphic novels yet.",
+  },
+};
+
+export function WorksPage({ kind }: { kind: WorkKind }) {
   const { spaceId = "" } = useParams();
   const { library } = useWorkspace();
   const navigate = useNavigate();
@@ -62,8 +84,8 @@ export function WorksPage() {
   );
   const graph = useStoryGraph(spaceId);
   const stories = library?.stories.filter((s) => s.spaceId === spaceId) ?? [];
-  const [novelOpen, setNovelOpen] = useState(false);
-  const [graphicOpen, setGraphicOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const text = copy[kind];
   function coverage(work: WorkCard) {
     const own =
       graph.data?.links.filter(
@@ -73,22 +95,32 @@ export function WorksPage() {
       ? `Tells ${own.map((l) => describeLink(l, stories, graph.data!.arcs)).join(", ")}`
       : "Not linked to a story yet.";
   }
-  async function create(kind: WorkKind, title: string) {
-    const work = await spaceApi.createWork(spaceId, kind, title);
-    navigate(workPath(work));
-  }
+  const items = works.data
+    ? kind === "novel"
+      ? works.data.novels
+      : works.data.comics
+    : [];
   return (
     <section className="library-page">
       <SpaceRequired>
         {(space) => (
           <>
-            <p className="eyebrow">{space.name}</p>
-            <h1>Novels & graphic novels</h1>
-            <p className="intro">
-              Novels and graphic novels are different works. A novel is written
-              in chapters. A graphic novel is drawn in pages. Either can tell
-              one story, several, or just part of an arc.
-            </p>
+            <div className="library-heading">
+              <div>
+                <p className="eyebrow">{space.name}</p>
+                <h1>{text.title}</h1>
+                <p className="intro">{text.intro}</p>
+              </div>
+              <Button
+                className="primary-create"
+                aria-expanded={open}
+                aria-controls="work-create"
+                onClick={() => setOpen((value) => !value)}
+              >
+                <Icon name="plus" size={18} />
+                {text.action}
+              </Button>
+            </div>
             <ResourceState
               loading={works.loading}
               error={works.error || graph.error}
@@ -97,81 +129,37 @@ export function WorksPage() {
                 graph.reload();
               }}
             />
+            {open ? (
+              <div className="create-panel" id="work-create">
+                <TitleForm
+                  label={
+                    kind === "novel" ? "Novel title" : "Graphic novel title"
+                  }
+                  action={kind === "novel" ? "Add novel" : "Add graphic novel"}
+                  onCreate={async (title) => {
+                    const work = await spaceApi.createWork(
+                      spaceId,
+                      kind,
+                      title,
+                    );
+                    setOpen(false);
+                    navigate(workPath(work));
+                  }}
+                />
+              </div>
+            ) : null}
             {works.data ? (
-              <>
-                <section
-                  className="work-shelf"
-                  aria-labelledby="novels-heading"
-                >
-                  <div className="section-heading">
-                    <h2 id="novels-heading">Novels</h2>
-                    <Button
-                      className="primary-create"
-                      aria-expanded={novelOpen}
-                      aria-controls="novel-create"
-                      onClick={() => setNovelOpen((open) => !open)}
-                    >
-                      <Icon name="plus" size={18} />
-                      New novel
-                    </Button>
-                  </div>
-                  {novelOpen ? (
-                    <div className="create-panel" id="novel-create">
-                      <TitleForm
-                        label="Novel title"
-                        action="Add novel"
-                        onCreate={async (title) => {
-                          await create("novel", title);
-                          setNovelOpen(false);
-                        }}
-                      />
-                    </div>
-                  ) : null}
-                  {works.data.novels.length ? (
-                    <WorkGrid works={works.data.novels} coverage={coverage} />
-                  ) : (
-                    <p className="muted">No novels yet.</p>
-                  )}
-                </section>
-                <section
-                  className="work-shelf"
-                  aria-labelledby="graphic-novels-heading"
-                >
-                  <div className="section-heading">
-                    <h2 id="graphic-novels-heading">Graphic novels</h2>
-                    <Button
-                      className="primary-create"
-                      aria-expanded={graphicOpen}
-                      aria-controls="graphic-create"
-                      onClick={() => setGraphicOpen((open) => !open)}
-                    >
-                      <Icon name="plus" size={18} />
-                      New graphic novel
-                    </Button>
-                  </div>
-                  {graphicOpen ? (
-                    <div className="create-panel" id="graphic-create">
-                      <TitleForm
-                        label="Graphic novel title"
-                        action="Add graphic novel"
-                        onCreate={async (title) => {
-                          await create("comic", title);
-                          setGraphicOpen(false);
-                        }}
-                      />
-                    </div>
-                  ) : null}
-                  {works.data.comics.length ? (
-                    <WorkGrid works={works.data.comics} coverage={coverage} />
-                  ) : (
-                    <p className="muted">No graphic novels yet.</p>
-                  )}
-                  <p className="field-hint">
-                    To adapt existing writing, open a chapter and choose “Adapt
-                    to comic”.
-                  </p>
-                </section>
-              </>
+              items.length ? (
+                <WorkGrid works={items} coverage={coverage} />
+              ) : (
+                <p className="muted">{text.empty}</p>
+              )
+            ) : null}
+            {kind === "comic" ? (
+              <p className="field-hint">
+                To adapt existing writing, open a chapter and choose “Adapt to
+                comic”.
+              </p>
             ) : null}
           </>
         )}

@@ -16,8 +16,10 @@ function summary(space: SpaceCard, section: SpaceSection) {
   switch (section) {
     case "stories":
       return plural(space.storyCount, "story", "stories");
-    case "works":
-      return `${plural(space.novelCount, "novel", "novels")} · ${plural(space.comicCount, "comic", "comics")}`;
+    case "novels":
+      return plural(space.novelCount, "novel", "novels");
+    case "graphic-novels":
+      return plural(space.comicCount, "graphic novel", "graphic novels");
     case "characters":
       return plural(space.characterCount, "character", "characters");
     case "notes":

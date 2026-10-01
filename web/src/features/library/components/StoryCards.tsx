@@ -44,7 +44,7 @@ export function StoryCards({
   }
   return (
     <>
-      <div className="cards">
+      <div className="story-grid">
         {stories.map((story, index) => {
           const position = story.order || index + 1;
           return (
@@ -87,10 +87,6 @@ export function StoryCards({
               </div>
               <Link to={storyPath(story)}>
                 <h2>{story.title}</h2>
-                <p>
-                  {story.overview ||
-                    "What happens here is still yours to find."}
-                </p>
                 <div className="tag-row">
                   {overviewTags(story.tags).map((tag) => (
                     <span className="tag" key={tag}>

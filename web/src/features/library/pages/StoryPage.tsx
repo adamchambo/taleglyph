@@ -15,6 +15,7 @@ import { ResourceState } from "../../../components/ui/ResourceState";
 import { useOpenWhenEmpty } from "../../../hooks/useOpenWhenEmpty";
 import { useResource } from "../../../hooks/useResource";
 import { spaceApi } from "../api/spaceApi";
+import { StoryArtwork } from "../components/StoryArtwork";
 import { useStoryGraph } from "../hooks/useStoryGraph";
 import {
   workPath,
@@ -437,7 +438,11 @@ function ToldIn({
     return (
       <p className="muted">
         No novel or comic tells this story yet. Link one from its own page under{" "}
-        <Link to={`/spaces/${story.spaceId}/works`}>Novels & graphic novels</Link>.
+        <Link to={`/spaces/${story.spaceId}/novels`}>Novels</Link> or{" "}
+        <Link to={`/spaces/${story.spaceId}/graphic-novels`}>
+          Graphic novels
+        </Link>
+        .
       </p>
     );
   return (
@@ -476,28 +481,36 @@ export function StoryPage() {
       <Link className="back-link" to={`/spaces/${story.spaceId}/stories`}>
         ← Stories
       </Link>
-      <div className="library-heading">
-        <div>
+      <div className="dashboard-hero story-hero">
+        <StoryArtwork
+          key={story.coverAssetId}
+          assetId={story.coverAssetId}
+          title={story.title}
+          variant={(story.order || 1) - 1}
+        />
+        <div className="dashboard-hero-content">
           <p className="eyebrow">{story.spaceName} / Story</p>
           <h1>{story.title}</h1>
-          <p className="intro">
-            {story.overview || "What happens here is still yours to find."}
-          </p>
-          <div className="tag-row">
-            {story.tags.map((t) => (
-              <span className="tag" key={t}>
-                {t}
-              </span>
-            ))}
+          <p>{story.overview || "What happens here is still yours to find."}</p>
+          {story.tags.length ? (
+            <div className="tag-row">
+              {story.tags.map((t) => (
+                <span className="tag" key={t}>
+                  {t}
+                </span>
+              ))}
+            </div>
+          ) : null}
+          <div className="hero-actions">
+            <Link
+              className="button glass"
+              to={`/spaces/${story.spaceId}/stories/${story.id}/settings`}
+            >
+              <Icon name="settings" size={16} />
+              Story details
+            </Link>
           </div>
         </div>
-        <Link
-          className="button secondary"
-          to={`/spaces/${story.spaceId}/stories/${story.id}/settings`}
-        >
-          <Icon name="settings" size={16} />
-          Story details
-        </Link>
       </div>
       <ResourceState
         loading={graph.loading}

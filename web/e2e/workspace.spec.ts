@@ -110,7 +110,7 @@ test("space hub, story arcs, linked comic, notes and context survive reload", as
     "The return",
     "The crossing",
   ]);
-  await page.goto(`/spaces/${spaceId}/works`);
+  await page.goto(`/spaces/${spaceId}/graphic-novels`);
   await expect(page.getByLabel("Switch space")).toHaveValue(spaceId);
   await page
     .getByRole("button", { name: "New graphic novel", exact: true })

@@ -36,7 +36,18 @@ export const router = createBrowserRouter([
         path: "spaces/:spaceId/stories/:storyId/settings",
         element: <StorySetupPage editing />,
       },
-      { path: "spaces/:spaceId/works", element: <WorksPage /> },
+      {
+        path: "spaces/:spaceId/novels",
+        element: <WorksPage kind="novel" />,
+      },
+      {
+        path: "spaces/:spaceId/graphic-novels",
+        element: <WorksPage kind="comic" />,
+      },
+      {
+        path: "spaces/:spaceId/works",
+        element: <Navigate to="../novels" relative="path" replace />,
+      },
       { path: "spaces/:spaceId/novels/:novelId", element: <NovelPage /> },
       { path: "spaces/:spaceId/notes", element: <NotesPage /> },
       ...(["world", "characters", "timeline", "assets"] as const).map(

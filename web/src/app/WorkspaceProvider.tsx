@@ -16,14 +16,16 @@ const recentLabels: [RegExp, string][] = [
   [new RegExp(`^/comics/${uuid}$`), "Comic editor"],
   [
     new RegExp(
-      `^/spaces/${uuid}/(stories|works|world|characters|notes|timeline|assets)$`,
+      `^/spaces/${uuid}/(stories|works|novels|graphic-novels|world|characters|notes|timeline|assets)$`,
     ),
     "",
   ],
 ];
 const sectionLabels: Record<string, string> = {
   stories: "Stories",
-  works: "Novels & graphic novels",
+  works: "Novels",
+  novels: "Novels",
+  "graphic-novels": "Graphic novels",
   world: "World",
   characters: "Characters",
   notes: "Notes",

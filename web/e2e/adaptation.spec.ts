@@ -37,7 +37,8 @@ test("write, adapt, place artwork, reuse a template, and review changed prose", 
     .fill(`Browser space ${suffix}`);
   await page.getByRole("button", { name: "Create space", exact: true }).click();
   await expect(page).toHaveURL(/\/spaces\/[a-f0-9-]+$/);
-  await page.goto(`${page.url()}/works`);
+  await page.goto(`${page.url()}/novels`);
+  await page.getByRole("button", { name: "New novel", exact: true }).click();
   await page.getByLabel("Novel title").fill("The Lantern Road");
   await page.getByRole("button", { name: "Add novel", exact: true }).click();
   await page.getByLabel("Chapter title").fill("A Light Beyond the Trees");
@@ -153,7 +154,7 @@ test("write, adapt, place artwork, reuse a template, and review changed prose", 
   await page.getByRole("button", { name: "+ Text", exact: true }).click();
   page.once("dialog", (dialog) => dialog.dismiss());
   await page
-    .getByRole("link", { name: "Novels & graphic novels", exact: true })
+    .getByRole("link", { name: "Graphic novels", exact: true })
     .click();
   await expect(
     page.getByRole("button", { name: "Save page", exact: true }),

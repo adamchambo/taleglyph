@@ -25,7 +25,7 @@ function Novel({ data }: { data: NovelWorkspace }) {
   useUnsavedChanges(detailsDirty);
   return (
     <>
-      <Link to={`/spaces/${novel.spaceId}/works`}>← Novels & graphic novels</Link>
+      <Link to={`/spaces/${novel.spaceId}/novels`}>← Novels</Link>
       <p className="eyebrow">Novel</p>
       <h1>{novel.title}</h1>
       <ResourceState
