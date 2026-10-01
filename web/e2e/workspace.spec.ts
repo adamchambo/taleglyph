@@ -24,7 +24,7 @@ test("library navigation and appearance persist without changing the layout", as
     route.fulfill({ json: { stories: [], spaces: [] } }),
   );
   await page.addInitScript(() =>
-    localStorage.setItem("talechemy.v1.navigation", JSON.stringify("expanded")),
+    localStorage.setItem("taleglyph.v1.navigation", JSON.stringify("expanded")),
   );
   await page.goto("/");
   await expect(
@@ -97,7 +97,7 @@ test("space hub, story arcs, linked comic, notes and context survive reload", as
   await page.getByRole("button", { name: "Create story", exact: true }).click();
   await expect(page).toHaveURL(/\/stories\/[a-f0-9-]+$/);
   const storyId = page.url().split("/").at(-1)!;
-  await page.getByText("Add an arc", { exact: true }).click();
+  await expect(page.getByLabel("Arc title", { exact: true })).toBeVisible();
   await page.getByLabel("Arc title", { exact: true }).fill("The crossing");
   await page.getByRole("button", { name: "Add arc", exact: true }).click();
   await page.getByLabel("Arc title", { exact: true }).fill("The return");

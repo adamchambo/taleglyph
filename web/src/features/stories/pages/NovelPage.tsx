@@ -4,7 +4,10 @@ import { useWorkspace } from "../../../app/workspaceContext";
 import { useResource } from "../../../hooks/useResource";
 import { useUnsavedChanges } from "../../../hooks/useUnsavedChanges";
 import { ResourceState } from "../../../components/ui/ResourceState";
+import { Button } from "../../../components/ui/Button";
+import { Icon } from "../../../components/ui/Icon";
 import { TitleForm } from "../../../components/ui/TitleForm";
+import { useOpenWhenEmpty } from "../../../hooks/useOpenWhenEmpty";
 import { CoverageEditor } from "../../library/components/CoverageEditor";
 import { WorkDetailsForm } from "../../library/components/WorkDetailsForm";
 import { useStoryGraph } from "../../library/hooks/useStoryGraph";
@@ -16,6 +19,7 @@ function Novel({ data }: { data: NovelWorkspace }) {
   const graph = useStoryGraph(data.novel.spaceId);
   const [novel, setNovel] = useState(data.novel);
   const [detailsDirty, setDetailsDirty] = useState(false);
+  const [adding, toggleAdding] = useOpenWhenEmpty(data.chapters.length === 0);
   useUnsavedChanges(detailsDirty);
   return (
     <>
@@ -39,7 +43,30 @@ function Novel({ data }: { data: NovelWorkspace }) {
           initial={graph.data.links}
         />
       ) : null}
-      <h2>Chapters</h2>
+      <div className="section-heading">
+        <h2>Chapters</h2>
+        <Button
+          className="primary-create"
+          aria-expanded={adding}
+          aria-controls="chapter-create"
+          onClick={toggleAdding}
+        >
+          <Icon name="plus" size={18} />
+          New chapter
+        </Button>
+      </div>
+      {adding ? (
+        <div className="create-panel" id="chapter-create">
+          <TitleForm
+            label="Chapter title"
+            action="Add chapter"
+            onCreate={async (title) => {
+              const chapter = await manuscriptApi.createChapter(novel.id, title);
+              navigate(`/chapters/${chapter.id}`);
+            }}
+          />
+        </div>
+      ) : null}
       {data.chapters.map((chapter) => (
         <Link
           className="chapter-row"
@@ -52,14 +79,6 @@ function Novel({ data }: { data: NovelWorkspace }) {
         </Link>
       ))}
       {!data.chapters.length ? <p>This novel has no chapters yet.</p> : null}
-      <TitleForm
-        label="Chapter title"
-        action="Add chapter"
-        onCreate={async (title) => {
-          const chapter = await manuscriptApi.createChapter(novel.id, title);
-          navigate(`/chapters/${chapter.id}`);
-        }}
-      />
       <details className="work-settings">
         <summary>Title and cover</summary>
         <WorkDetailsForm

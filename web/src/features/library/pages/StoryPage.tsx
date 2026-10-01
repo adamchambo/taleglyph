@@ -5,6 +5,7 @@ import { Button } from "../../../components/ui/Button";
 import { Icon } from "../../../components/ui/Icon";
 import { Input, Textarea } from "../../../components/ui/Input";
 import { ResourceState } from "../../../components/ui/ResourceState";
+import { useOpenWhenEmpty } from "../../../hooks/useOpenWhenEmpty";
 import { useResource } from "../../../hooks/useResource";
 import { spaceApi } from "../api/spaceApi";
 import { useStoryGraph } from "../hooks/useStoryGraph";
@@ -98,6 +99,7 @@ function Arcs({ story, initial }: { story: StoryCard; initial: Arc[] }) {
   const [editing, setEditing] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [creating, toggleCreating] = useOpenWhenEmpty(arcs.length === 0);
   async function run(action: () => Promise<void>) {
     setBusy(true);
     setError("");
@@ -133,6 +135,30 @@ function Arcs({ story, initial }: { story: StoryCard; initial: Arc[] }) {
   }
   return (
     <>
+      <div className="section-heading">
+        <h2>Arcs</h2>
+        <Button
+          className="primary-create"
+          aria-expanded={creating}
+          aria-controls="arc-create"
+          onClick={toggleCreating}
+        >
+          <Icon name="plus" size={18} />
+          New arc
+        </Button>
+      </div>
+      {creating ? (
+        <div className="create-panel" id="arc-create">
+          <ArcForm
+            action="Add arc"
+            onSubmit={async (draft) => {
+              const arc = await spaceApi.createArc(story.id, draft);
+              setArcs((items) => [...items, arc]);
+              void refresh();
+            }}
+          />
+        </div>
+      ) : null}
       {arcs.length ? (
         <ol className="arc-list">
           {arcs.map((arc, i) => (
@@ -207,17 +233,6 @@ function Arcs({ story, initial }: { story: StoryCard; initial: Arc[] }) {
           {error}
         </p>
       ) : null}
-      <details className="arc-create">
-        <summary>Add an arc</summary>
-        <ArcForm
-          action="Add arc"
-          onSubmit={async (draft) => {
-            const arc = await spaceApi.createArc(story.id, draft);
-            setArcs((items) => [...items, arc]);
-            void refresh();
-          }}
-        />
-      </details>
     </>
   );
 }
@@ -317,7 +332,6 @@ export function StoryPage() {
           Story details
         </Link>
       </div>
-      <h2>Arcs</h2>
       <ResourceState
         loading={graph.loading}
         error={graph.error}

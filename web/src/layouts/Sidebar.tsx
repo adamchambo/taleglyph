@@ -50,13 +50,13 @@ export function Sidebar() {
       <Link
         className="studio-brand"
         to="/library"
-        aria-label="Talechemy library"
+        aria-label="Taleglyph library"
       >
         <span className="brand-mark">
           <Icon name="spark" size={23} />
         </span>
         <span className="nav-label">
-          talechemy<span className="brand-dot">.</span>
+          taleglyph<span className="brand-dot">.</span>
         </span>
       </Link>
       <nav id="sidebar-navigation" aria-label="Main navigation">

@@ -1,4 +1,17 @@
-import { useTheme, type Appearance } from "../../../themes/themeContext";
+import {
+  decorations,
+  useTheme,
+  type Appearance,
+  type Decoration,
+} from "../../../themes/themeContext";
+const decorationLabels: Record<Decoration, string> = {
+  none: "Clean",
+  botanical: "Botanical",
+  orbital: "Orbital",
+  ruled: "Ruled",
+  graph: "Graph",
+  stars: "Stars",
+};
 export function AppearancePage() {
   const { appearance, setAppearance } = useTheme();
   return (
@@ -33,11 +46,9 @@ export function AppearancePage() {
             {
               key: "decoration",
               title: "A touch of atmosphere",
-              items: [
-                ["none", "Clean"],
-                ["botanical", "Botanical"],
-                ["orbital", "Orbital"],
-              ],
+              items: decorations.map(
+                (value) => [value, decorationLabels[value]] as const,
+              ),
             },
           ] as const
         ).map((group) => (

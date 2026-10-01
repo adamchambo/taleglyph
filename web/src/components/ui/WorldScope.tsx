@@ -38,9 +38,7 @@ export function WorldScope({
                 ))}
               </select>
             </label>
-          ) : (
-            <p className="scope-caption">Shared assets · {space.name}</p>
-          )}
+          ) : null}
           {children(id)}
         </>
       ) : worlds.data?.length === 0 ? (

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { ThemeContext, type Appearance } from "./themeContext";
+import { decorations, ThemeContext, type Appearance } from "./themeContext";
 import { readPreference, writePreference } from "../lib/preferences";
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [appearance, setState] = useState<Appearance>(() => {
@@ -10,7 +10,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         ? v.accent!
         : "sage",
       decoration:
-        v?.decoration === "botanical" || v?.decoration === "orbital"
+        v.decoration && decorations.includes(v.decoration)
           ? v.decoration
           : "none",
     };

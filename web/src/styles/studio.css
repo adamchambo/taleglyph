@@ -819,6 +819,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
   margin: 32px 0 22px;
 }
 .section-heading .eyebrow {
@@ -976,29 +978,93 @@
 [data-decoration="botanical"] .studio-sidebar {
   background-image:
     radial-gradient(
-      ellipse 160px 420px at -100px 80%,
-      #5c897a18 50%,
+      ellipse 160px 420px at -40px 18%,
+      color-mix(in srgb, var(--accent) 22%, transparent) 50%,
       transparent 51%
     ),
     radial-gradient(
-      ellipse 130px 310px at 230px 95%,
-      #5c897a12 50%,
+      ellipse 120px 280px at 120% 78%,
+      color-mix(in srgb, var(--accent) 14%, transparent) 50%,
       transparent 51%
     );
 }
 [data-decoration="orbital"] .studio-sidebar {
   background-image:
     radial-gradient(
-      circle at 30% 85%,
-      transparent 95px,
-      #8495bd22 96px,
-      transparent 97px
+      circle at 30% 88%,
+      transparent 54px,
+      color-mix(in srgb, var(--accent) 28%, transparent) 55px,
+      transparent 56px
     ),
     radial-gradient(
-      circle at 30% 85%,
-      transparent 115px,
-      #8495bd12 116px,
-      transparent 117px
+      circle at 30% 88%,
+      transparent 78px,
+      color-mix(in srgb, var(--accent) 16%, transparent) 79px,
+      transparent 80px
+    );
+}
+[data-decoration="ruled"] .studio-sidebar {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 27px,
+    color-mix(in srgb, var(--accent) 22%, transparent) 28px
+  );
+}
+[data-decoration="graph"] .studio-sidebar {
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--accent) 16%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--accent) 16%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 22px 22px;
+}
+[data-decoration="stars"] .studio-sidebar {
+  background-image:
+    radial-gradient(
+      circle at 22% 16%,
+      var(--accent) 1.6px,
+      transparent 2.2px
+    ),
+    radial-gradient(
+      circle at 70% 10%,
+      color-mix(in srgb, var(--accent) 65%, transparent) 1.2px,
+      transparent 1.8px
+    ),
+    radial-gradient(
+      circle at 84% 34%,
+      var(--accent) 1.8px,
+      transparent 2.4px
+    ),
+    radial-gradient(
+      circle at 28% 42%,
+      color-mix(in srgb, var(--accent) 50%, transparent) 1.2px,
+      transparent 1.8px
+    ),
+    radial-gradient(
+      circle at 62% 56%,
+      var(--accent) 1.5px,
+      transparent 2.1px
+    ),
+    radial-gradient(
+      circle at 14% 68%,
+      color-mix(in srgb, var(--accent) 55%, transparent) 1.3px,
+      transparent 1.9px
+    ),
+    radial-gradient(
+      circle at 76% 78%,
+      var(--accent) 1.7px,
+      transparent 2.3px
+    ),
+    radial-gradient(
+      circle at 40% 90%,
+      color-mix(in srgb, var(--accent) 60%, transparent) 1.2px,
+      transparent 1.8px
     );
 }
 @media (min-width: 1500px) {
@@ -1178,6 +1244,21 @@
   width: 100%;
   min-width: 0;
 }
+textarea.form-control {
+  max-height: 240px;
+  overflow-y: auto;
+}
+select.form-control {
+  appearance: none;
+  padding-right: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%2368737e' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 12px 8px;
+}
+[data-theme="dark"] select.form-control {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%23a0aab8' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
 .story-setup .setup-step > label {
   display: grid;
   gap: 8px;
@@ -1245,12 +1326,23 @@
 }
 .arc-create,
 .note-create,
+.create-panel,
 .work-settings {
   margin: 18px 0 30px;
   padding: 18px 20px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface);
+}
+.create-panel .form,
+.create-panel .inline-form,
+.create-panel .asset-upload {
+  margin: 0;
+}
+.create-panel .form fieldset {
+  border: 0;
+  padding: 0;
+  background: transparent;
 }
 .arc-create > summary,
 .note-create > summary,

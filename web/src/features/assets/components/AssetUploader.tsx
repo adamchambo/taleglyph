@@ -1,22 +1,23 @@
-import { useState, type FormEvent } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { Button } from "../../../components/ui/Button";
 import { assetApi } from "../api/assetApi";
 import type { Asset } from "../types";
 export function AssetUploader({
   worldId,
   onUploaded,
+  showLegend = true,
 }: {
   worldId: string;
   onUploaded: (asset: Asset) => void;
+  showLegend?: boolean;
 }) {
   const [name, setName] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [inputKey, setInputKey] = useState(0);
-  async function submit(e: FormEvent) {
-    e.preventDefault();
-    if (!file) return;
+  async function submit() {
+    if (!file || !name.trim() || busy) return;
     setBusy(true);
     setError("");
     try {
@@ -31,14 +32,18 @@ export function AssetUploader({
       setBusy(false);
     }
   }
+  function onKeyDown(e: KeyboardEvent) {
+    if (e.key !== "Enter" || !(e.target instanceof HTMLInputElement)) return;
+    e.preventDefault();
+    void submit();
+  }
   return (
-    <form className="asset-upload" onSubmit={submit}>
+    <div className="asset-upload" onKeyDown={onKeyDown}>
       <fieldset disabled={busy}>
-        <legend>Import artwork</legend>
+        {showLegend ? <legend>Import artwork</legend> : null}
         <label>
           Asset name
           <input
-            required
             maxLength={120}
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -50,12 +55,11 @@ export function AssetUploader({
             key={inputKey}
             type="file"
             accept="image/png,image/jpeg,image/webp"
-            required
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
         </label>
         <small>PNG, JPEG or WebP · up to 8 MB</small>
-        <Button type="submit" disabled={!file || !name.trim()}>
+        <Button type="button" disabled={!file || !name.trim()} onClick={() => void submit()}>
           {busy ? "Uploading…" : "Upload asset"}
         </Button>
       </fieldset>
@@ -64,6 +68,6 @@ export function AssetUploader({
           {error}
         </p>
       ) : null}
-    </form>
+    </div>
   );
 }

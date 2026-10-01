@@ -1,8 +1,11 @@
 import { useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useWorkspace } from "../../../app/workspaceContext";
+import { Button } from "../../../components/ui/Button";
+import { Icon } from "../../../components/ui/Icon";
 import { ResourceState } from "../../../components/ui/ResourceState";
 import { TitleForm } from "../../../components/ui/TitleForm";
+import { useOpenWhenEmpty } from "../../../hooks/useOpenWhenEmpty";
 import { useResource } from "../../../hooks/useResource";
 import { spaceApi } from "../api/spaceApi";
 import { describeLink } from "../links";
@@ -60,6 +63,10 @@ export function WorksPage() {
   );
   const graph = useStoryGraph(spaceId);
   const stories = library?.stories.filter((s) => s.spaceId === spaceId) ?? [];
+  const novelsEmpty = works.data ? works.data.novels.length === 0 : undefined;
+  const comicsEmpty = works.data ? works.data.comics.length === 0 : undefined;
+  const [novelOpen, toggleNovel] = useOpenWhenEmpty(novelsEmpty);
+  const [comicOpen, toggleComic] = useOpenWhenEmpty(comicsEmpty);
   function coverage(work: WorkCard) {
     const own =
       graph.data?.links.filter(
@@ -94,28 +101,58 @@ export function WorksPage() {
             />
             {works.data ? (
               <>
-                <h2>Novels</h2>
+                <div className="section-heading">
+                  <h2>Novels</h2>
+                  <Button
+                    className="primary-create"
+                    aria-expanded={novelOpen}
+                    aria-controls="novel-create"
+                    onClick={toggleNovel}
+                  >
+                    <Icon name="plus" size={18} />
+                    New novel
+                  </Button>
+                </div>
+                {novelOpen ? (
+                  <div className="create-panel" id="novel-create">
+                    <TitleForm
+                      label="Novel title"
+                      action="Add novel"
+                      onCreate={(title) => create("novel", title)}
+                    />
+                  </div>
+                ) : null}
                 {works.data.novels.length ? (
                   <WorkGrid works={works.data.novels} coverage={coverage} />
                 ) : (
                   <p className="muted">No novels yet.</p>
                 )}
-                <TitleForm
-                  label="Novel title"
-                  action="Add novel"
-                  onCreate={(title) => create("novel", title)}
-                />
-                <h2>Comics</h2>
+                <div className="section-heading">
+                  <h2>Comics</h2>
+                  <Button
+                    className="primary-create"
+                    aria-expanded={comicOpen}
+                    aria-controls="comic-create"
+                    onClick={toggleComic}
+                  >
+                    <Icon name="plus" size={18} />
+                    New comic
+                  </Button>
+                </div>
+                {comicOpen ? (
+                  <div className="create-panel" id="comic-create">
+                    <TitleForm
+                      label="Comic title"
+                      action="Create blank comic"
+                      onCreate={(title) => create("comic", title)}
+                    />
+                  </div>
+                ) : null}
                 {works.data.comics.length ? (
                   <WorkGrid works={works.data.comics} coverage={coverage} />
                 ) : (
                   <p className="muted">No comics yet.</p>
                 )}
-                <TitleForm
-                  label="Comic title"
-                  action="Create blank comic"
-                  onCreate={(title) => create("comic", title)}
-                />
                 <p className="field-hint">
                   To adapt existing writing, open a chapter and choose “Adapt to
                   comic”.

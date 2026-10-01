@@ -1,7 +1,10 @@
 import { useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useResource } from "../../../hooks/useResource";
+import { Button } from "../../../components/ui/Button";
+import { Icon } from "../../../components/ui/Icon";
 import { ResourceState } from "../../../components/ui/ResourceState";
+import { useOpenWhenEmpty } from "../../../hooks/useOpenWhenEmpty";
+import { useResource } from "../../../hooks/useResource";
 import { worldApi } from "../api/worldApi";
 import { useCharacters } from "../hooks/useCharacters";
 import { CharacterCard } from "../components/CharacterCard";
@@ -22,6 +25,19 @@ export function WorldDetailPage({
     ),
   );
   const characters = useCharacters(worldId);
+  const castEmpty = characters.data ? characters.data.length === 0 : undefined;
+  const [creating, toggleCreating] = useOpenWhenEmpty(castEmpty);
+  const createButton = (
+    <Button
+      className="primary-create"
+      aria-expanded={creating}
+      aria-controls="character-create"
+      onClick={toggleCreating}
+    >
+      <Icon name="plus" size={18} />
+      New character
+    </Button>
+  );
   return (
     <section>
       {!charactersOnly ? (
@@ -34,18 +50,42 @@ export function WorldDetailPage({
       />
       {world.data ? (
         <>
-          <p className="eyebrow">Story world</p>
-          <h1>{charactersOnly ? "Characters" : world.data.name}</h1>
-          <p className="intro">{world.data.description}</p>
-          {!charactersOnly ? (
-            <div className="toolbar">
-              <Link className="button" to={`/spaces/${worldId}/works`}>
-                Novels & comics
-              </Link>
-              <Link to={`/spaces/${worldId}/assets`}>Browse assets →</Link>
+          {charactersOnly ? (
+            <div className="library-heading">
+              <div>
+                <p className="eyebrow">Story world</p>
+                <h1>Characters</h1>
+                <p className="intro">{world.data.description}</p>
+              </div>
+              {createButton}
+            </div>
+          ) : (
+            <>
+              <p className="eyebrow">Story world</p>
+              <h1>{world.data.name}</h1>
+              <p className="intro">{world.data.description}</p>
+              <div className="toolbar">
+                <Link className="button" to={`/spaces/${worldId}/works`}>
+                  Novels & comics
+                </Link>
+                <Link to={`/spaces/${worldId}/assets`}>Browse assets →</Link>
+              </div>
+              <div className="section-heading">
+                <h2>Characters</h2>
+                {createButton}
+              </div>
+            </>
+          )}
+          {creating ? (
+            <div className="create-panel" id="character-create">
+              <CharacterForm
+                onSubmit={async (input) => {
+                  await worldApi.createCharacter(worldId, input);
+                  characters.reload();
+                }}
+              />
             </div>
           ) : null}
-          {!charactersOnly ? <h2>Characters</h2> : null}
           <ResourceState
             loading={characters.loading}
             error={characters.error}
@@ -56,13 +96,7 @@ export function WorldDetailPage({
               <CharacterCard key={character.id} character={character} />
             ))}
           </div>
-          {characters.data?.length === 0 ? <p>Your cast starts here.</p> : null}
-          <CharacterForm
-            onSubmit={async (input) => {
-              await worldApi.createCharacter(worldId, input);
-              characters.reload();
-            }}
-          />
+          {castEmpty ? <p>Your cast starts here.</p> : null}
         </>
       ) : null}
     </section>

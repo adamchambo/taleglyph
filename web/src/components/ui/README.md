@@ -8,4 +8,4 @@ Keep reusable, domain-independent controls here. Feature components own story/ch
 - `ResourceState`: shared loading/error/retry presentation.
 - `TitleForm`: `label` names the field, `action` names the submit button, `onCreate(title)` receives the trimmed title and returns a promise; rejection keeps the draft.
 
-Use semantic HTML and Talechemy CSS tokens. Add complex primitives when a feature needs them, preserving keyboard operation and reduced motion. shadcn/Radix can be adopted incrementally without copying a generic visual theme.
+Use semantic HTML and Taleglyph CSS tokens. Add complex primitives when a feature needs them, preserving keyboard operation and reduced motion. shadcn/Radix can be adopted incrementally without copying a generic visual theme.
