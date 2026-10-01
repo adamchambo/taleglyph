@@ -2,8 +2,17 @@
 * {
   box-sizing: border-box;
 }
+html {
+  background: var(--bg);
+  color: var(--text);
+}
 body {
   margin: 0;
+  background: var(--bg);
+}
+body,
+#root {
+  min-height: 100%;
 }
 button,
 input,

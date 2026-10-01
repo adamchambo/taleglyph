@@ -30,7 +30,7 @@ function Studio({
   const page = comic.pages[selected];
   return (
     <>
-      <Link to={`/spaces/${comic.worldId}/works`}>← Novels & comics</Link>
+      <Link to={`/spaces/${comic.worldId}/works`}>← Novels & graphic novels</Link>
       <div className="page-heading">
         <div>
           <p className="eyebrow">{comic.spaceName} / Comic</p>

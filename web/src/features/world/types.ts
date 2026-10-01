@@ -3,8 +3,9 @@ export type World = {
   name: string;
   description: string;
   theme: string;
+  castSummary: string;
 };
-export type CreateWorld = Omit<World, "id">;
+export type CreateWorld = Omit<World, "id" | "castSummary">;
 export type Character = {
   id: string;
   worldId: string;

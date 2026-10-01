@@ -10,7 +10,8 @@ public sealed class LibraryService(ILibraryRepository repo)
     {
         var space=await repo.Space(request.SpaceId,ct)??throw new WorkflowException(404,"Space not found.");
         Validate(request);
-        var story=new Story {Id=Guid.NewGuid(),WorldId=space.Id};Apply(story,request);
+        var existing=await repo.Stories(space.Id,ct);
+        var story=new Story {Id=Guid.NewGuid(),WorldId=space.Id,Order=existing.Select(x=>x.Order).DefaultIfEmpty().Max()+1};Apply(story,request);
         repo.Add(story);await repo.Save(ct);return await Card(story.Id,ct);
     }
     public async Task<StoryCard> Update(Guid id,StorySetupRequest request,CancellationToken ct)
@@ -29,6 +30,20 @@ public sealed class LibraryService(ILibraryRepository repo)
     {
         story.Title=r.Title.Trim();story.Synopsis=r.Overview.Trim();story.Tags=r.Tags.Select(x=>x.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         story.UpdatedAt=DateTimeOffset.UtcNow;
+    }
+    public async Task<StoryCard[]> Reorder(Guid spaceId, Guid[] ids, CancellationToken ct)
+    {
+        _=await repo.Space(spaceId,ct)??throw new WorkflowException(404,"Space not found.");
+        var stories=await repo.Stories(spaceId,ct);
+        if(ids.Length!=stories.Count||ids.Distinct().Count()!=ids.Length||ids.Any(id=>stories.All(s=>s.Id!=id)))
+            throw new WorkflowException(409,"The stories in this space changed. Reload before reordering.");
+        var offset=stories.Count==0?0:stories.Max(x=>x.Order);
+        for(var i=0;i<ids.Length;i++) stories.Single(s=>s.Id==ids[i]).Order=offset+i+1;
+        await repo.Save(ct);
+        for(var i=0;i<ids.Length;i++) stories.Single(s=>s.Id==ids[i]).Order=i+1;
+        await repo.Save(ct);
+        var snapshot=await repo.Snapshot(ct);
+        return snapshot.Stories.Where(s=>s.SpaceId==spaceId).ToArray();
     }
     public async Task<LibraryRouteContext> Context(string kind,Guid id,CancellationToken ct)
     {

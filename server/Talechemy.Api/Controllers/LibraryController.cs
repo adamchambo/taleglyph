@@ -10,5 +10,6 @@ public sealed class LibraryController(LibraryService service):ControllerBase
     [HttpPost("stories")] public async Task<IActionResult> Create(StorySetupRequest request,CancellationToken ct)
     {var story=await service.Create(request,ct);return CreatedAtAction(nameof(Story),new{id=story.Id},story);}
     [HttpPut("stories/{id:guid}")] public async Task<IActionResult> Update(Guid id,StorySetupRequest request,CancellationToken ct)=>Ok(await service.Update(id,request,ct));
+    [HttpPut("spaces/{id:guid}/stories/order")] public async Task<IActionResult> ReorderStories(Guid id,StoryOrderRequest request,CancellationToken ct)=>Ok(await service.Reorder(id,request.StoryIds,ct));
     [HttpGet("context/{kind}/{id:guid}")] public async Task<IActionResult> Context(string kind,Guid id,CancellationToken ct)=>Ok(await service.Context(kind,id,ct));
 }

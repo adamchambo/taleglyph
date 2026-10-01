@@ -4,7 +4,11 @@ namespace Talechemy.Api.DTOs.Library;
 public sealed record SpaceCard(Guid Id, string Name, string Description, Guid? CoverAssetId, int StoryCount, int NovelCount,
     int ComicCount, int CharacterCount, int AssetCount, int NoteCount);
 public sealed record StoryCard(Guid Id, Guid SpaceId, string SpaceName, string Title, string Overview, string[] Tags,
-    DateTimeOffset UpdatedAt, int Revision, int ArcCount);
+    DateTimeOffset UpdatedAt, int Revision, int ArcCount, int Order);
+public sealed class StoryOrderRequest
+{
+    [Required, MinLength(1), MaxLength(200)] public Guid[] StoryIds { get; init; } = [];
+}
 public sealed record LibrarySnapshot(IReadOnlyList<SpaceCard> Spaces, IReadOnlyList<StoryCard> Stories);
 public sealed class StorySetupRequest
 {

@@ -6,36 +6,8 @@ import { useWorkspace } from "../../../app/workspaceContext";
 import { useUnsavedChanges } from "../../../hooks/useUnsavedChanges";
 import { Icon } from "../../../components/ui/Icon";
 import { libraryApi } from "../api/libraryApi";
+import { genres, sameTag, tones } from "../storyTags";
 import { storyPath, type StoryCard, type StorySetup } from "../types";
-const genres = [
-  "Fantasy",
-  "Science fiction",
-  "Action",
-  "Adventure",
-  "Horror",
-  "Mystery",
-  "Thriller",
-  "Romance",
-  "Drama",
-  "Comedy",
-  "Historical",
-  "Slice of life",
-];
-const tones = [
-  "Hopeful",
-  "Dark",
-  "Gritty",
-  "Eerie",
-  "Suspenseful",
-  "Tragic",
-  "Cozy",
-  "Whimsical",
-  "Humorous",
-  "Romantic",
-];
-function sameTag(a: string, b: string) {
-  return a.toLowerCase() === b.toLowerCase();
-}
 function groupChoices(defaults: string[], tags: string[]) {
   return defaults.map((name) => tags.find((tag) => sameTag(tag, name)) ?? name);
 }

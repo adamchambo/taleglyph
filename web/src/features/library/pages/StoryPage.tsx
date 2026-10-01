@@ -437,7 +437,7 @@ function ToldIn({
     return (
       <p className="muted">
         No novel or comic tells this story yet. Link one from its own page under{" "}
-        <Link to={`/spaces/${story.spaceId}/works`}>Novels & comics</Link>.
+        <Link to={`/spaces/${story.spaceId}/works`}>Novels & graphic novels</Link>.
       </p>
     );
   return (

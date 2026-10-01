@@ -11,6 +11,7 @@ public sealed class WorldService(IWorldRepository repository) : IWorldService
 {
     public async Task<IReadOnlyList<WorldResponse>> GetWorldsAsync(CancellationToken ct = default) => (await repository.GetWorldsAsync(ct)).Select(x => x.ToResponse()).ToArray();
     public async Task<WorldResponse?> GetWorldAsync(Guid id, CancellationToken ct = default) => (await repository.GetWorldAsync(id, ct))?.ToResponse();
+    public async Task<WorldResponse?> UpdateCastSummaryAsync(Guid id, string summary, CancellationToken ct = default) => (await repository.UpdateCastSummaryAsync(id, summary.Trim(), ct))?.ToResponse();
     public async Task<IReadOnlyList<CharacterResponse>> GetCharactersAsync(Guid worldId, CancellationToken ct = default) => (await repository.GetCharactersAsync(worldId, ct)).Select(x => x.ToResponse()).ToArray();
     public async Task<CharacterResponse?> GetCharacterAsync(Guid id, CancellationToken ct = default) => (await repository.GetCharacterAsync(id, ct))?.ToResponse();
     public async Task<IReadOnlyList<LocationResponse>> GetLocationsAsync(Guid worldId, CancellationToken ct = default) => (await repository.GetLocationsAsync(worldId, ct)).Select(x => x.ToResponse()).ToArray();

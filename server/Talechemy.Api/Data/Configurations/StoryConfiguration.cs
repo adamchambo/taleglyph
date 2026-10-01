@@ -16,5 +16,6 @@ public sealed class StoryConfiguration : IEntityTypeConfiguration<Story>
         builder.Property(x => x.Title).IsRequired().HasMaxLength(120);
         builder.Property(x => x.Synopsis).IsRequired();
         builder.HasOne<World>().WithMany().HasForeignKey(x => x.WorldId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(x => new { x.WorldId, x.Order }).IsUnique();
     }
 }

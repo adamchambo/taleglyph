@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useLayoutEffect, useState, type ReactNode } from "react";
 import { decorations, ThemeContext, type Appearance } from "./themeContext";
 import { readPreference, writePreference } from "../lib/preferences";
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -19,6 +19,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setState(value);
     writePreference("appearance", value);
   }
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.dataset.theme = appearance.mode;
+    root.dataset.accent = appearance.accent;
+    root.dataset.decoration = appearance.decoration;
+  }, [appearance]);
   return (
     <ThemeContext.Provider value={{ appearance, setAppearance }}>
       <div

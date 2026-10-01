@@ -12,7 +12,7 @@ namespace Talechemy.Api.Mapping;
 
 public static class ResponseMapping
 {
-    public static WorldResponse ToResponse(this World value) => new(value.Id, value.Name, value.Description, value.Theme);
+    public static WorldResponse ToResponse(this World value) => new(value.Id, value.Name, value.Description, value.Theme, value.CastSummary);
     public static LoreEntryResponse ToResponse(this LoreEntry value) => new(value.Id, value.WorldId, value.Title, value.Content, value.CanonStatus);
     public static RelationshipResponse ToResponse(this Relationship value) => new(value.Id, value.WorldId, value.FromCharacterId, value.ToCharacterId, value.Kind, value.Description);
     public static NoteResponse ToResponse(this Note value) => new(value.Id, value.WorldId, value.Title, value.Content);

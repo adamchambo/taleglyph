@@ -113,10 +113,13 @@ test("space hub, story arcs, linked comic, notes and context survive reload", as
   await page.goto(`/spaces/${spaceId}/works`);
   await expect(page.getByLabel("Switch space")).toHaveValue(spaceId);
   await page
-    .getByLabel("Comic title", { exact: true })
+    .getByRole("button", { name: "New graphic novel", exact: true })
+    .click();
+  await page
+    .getByLabel("Graphic novel title", { exact: true })
     .fill("An independent comic");
   await page
-    .getByRole("button", { name: "Create blank comic", exact: true })
+    .getByRole("button", { name: "Add graphic novel", exact: true })
     .click();
   await expect(page).toHaveURL(/\/comics\/[a-f0-9-]+$/);
   await expect(page.locator(".comic-panel")).toHaveCount(3);

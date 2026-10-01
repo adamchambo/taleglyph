@@ -20,6 +20,7 @@ export type StoryCard = {
   updatedAt: string;
   revision: number;
   arcCount: number;
+  order: number;
 };
 export type LibrarySnapshot = {
   spaces: SpaceCard[];
@@ -95,9 +96,9 @@ export const spaceSections: {
   },
   {
     id: "works",
-    label: "Novels & comics",
+    label: "Novels & graphic novels",
     icon: "novel",
-    description: "The books and comics that tell those stories.",
+    description: "Novels and graphic novels, kept as different works.",
   },
   {
     id: "world",

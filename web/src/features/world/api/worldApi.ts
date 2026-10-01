@@ -9,6 +9,11 @@ export const worldApi = {
       method: "POST",
       body: JSON.stringify(input),
     }),
+  updateCastSummary: (id: string, summary: string) =>
+    apiClient<World>(`/worlds/${encodeURIComponent(id)}/cast-summary`, {
+      method: "PUT",
+      body: JSON.stringify({ summary }),
+    }),
   characters: (worldId: string, signal: AbortSignal) =>
     apiClient<Character[]>(
       `/characters?worldId=${encodeURIComponent(worldId)}`,

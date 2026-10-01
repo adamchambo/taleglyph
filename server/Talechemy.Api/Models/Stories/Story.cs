@@ -7,6 +7,7 @@ public sealed class Story
     public string Title { get; set; } = "";
     public string Synopsis { get; set; } = "";
     public string[] Tags { get; set; } = [];
+    public int Order { get; set; }
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
     public int Revision { get; set; } = 1;
 }

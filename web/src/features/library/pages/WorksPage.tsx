@@ -1,11 +1,10 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useWorkspace } from "../../../app/workspaceContext";
 import { Button } from "../../../components/ui/Button";
 import { Icon } from "../../../components/ui/Icon";
 import { ResourceState } from "../../../components/ui/ResourceState";
 import { TitleForm } from "../../../components/ui/TitleForm";
-import { useOpenWhenEmpty } from "../../../hooks/useOpenWhenEmpty";
 import { useResource } from "../../../hooks/useResource";
 import { spaceApi } from "../api/spaceApi";
 import { describeLink } from "../links";
@@ -32,7 +31,9 @@ function WorkGrid({
           />
           <div className="story-tile-body">
             <div className="tile-kicker">
-              <span>{work.kind === "novel" ? "Novel" : "Comic"}</span>
+              <span>
+                {work.kind === "novel" ? "Novel" : "Graphic novel"}
+              </span>
             </div>
             <h2>{work.title}</h2>
             <p>{coverage(work)}</p>
@@ -63,10 +64,8 @@ export function WorksPage() {
   );
   const graph = useStoryGraph(spaceId);
   const stories = library?.stories.filter((s) => s.spaceId === spaceId) ?? [];
-  const novelsEmpty = works.data ? works.data.novels.length === 0 : undefined;
-  const comicsEmpty = works.data ? works.data.comics.length === 0 : undefined;
-  const [novelOpen, toggleNovel, closeNovel] = useOpenWhenEmpty(novelsEmpty);
-  const [comicOpen, toggleComic, closeComic] = useOpenWhenEmpty(comicsEmpty);
+  const [novelOpen, setNovelOpen] = useState(false);
+  const [graphicOpen, setGraphicOpen] = useState(false);
   function coverage(work: WorkCard) {
     const own =
       graph.data?.links.filter(
@@ -86,10 +85,11 @@ export function WorksPage() {
         {(space) => (
           <>
             <p className="eyebrow">{space.name}</p>
-            <h1>Novels & comics</h1>
+            <h1>Novels & graphic novels</h1>
             <p className="intro">
-              Each book or comic can tell one story, several, or just part of an
-              arc. Link them from their own page.
+              Novels and graphic novels are different works. A novel is written
+              in chapters. A graphic novel is drawn in pages. Either can tell
+              one story, several, or just part of an arc.
             </p>
             <ResourceState
               loading={works.loading}
@@ -101,13 +101,14 @@ export function WorksPage() {
             />
             {works.data ? (
               <>
+                <div className="work-shelf">
                 <div className="section-heading">
                   <h2>Novels</h2>
                   <Button
                     className="primary-create"
                     aria-expanded={novelOpen}
                     aria-controls="novel-create"
-                    onClick={toggleNovel}
+                    onClick={() => setNovelOpen((open) => !open)}
                   >
                     <Icon name="plus" size={18} />
                     New novel
@@ -120,7 +121,7 @@ export function WorksPage() {
                       action="Add novel"
                       onCreate={async (title) => {
                         await create("novel", title);
-                        closeNovel();
+                        setNovelOpen(false);
                       }}
                     />
                   </div>
@@ -130,26 +131,28 @@ export function WorksPage() {
                 ) : (
                   <p className="muted">No novels yet.</p>
                 )}
+                </div>
+                <div className="work-shelf">
                 <div className="section-heading">
-                  <h2>Comics</h2>
+                  <h2>Graphic novels</h2>
                   <Button
                     className="primary-create"
-                    aria-expanded={comicOpen}
-                    aria-controls="comic-create"
-                    onClick={toggleComic}
+                    aria-expanded={graphicOpen}
+                    aria-controls="graphic-create"
+                    onClick={() => setGraphicOpen((open) => !open)}
                   >
                     <Icon name="plus" size={18} />
-                    New comic
+                    New graphic novel
                   </Button>
                 </div>
-                {comicOpen ? (
-                  <div className="create-panel" id="comic-create">
+                {graphicOpen ? (
+                  <div className="create-panel" id="graphic-create">
                     <TitleForm
-                      label="Comic title"
-                      action="Create blank comic"
+                      label="Graphic novel title"
+                      action="Add graphic novel"
                       onCreate={async (title) => {
                         await create("comic", title);
-                        closeComic();
+                        setGraphicOpen(false);
                       }}
                     />
                   </div>
@@ -157,12 +160,13 @@ export function WorksPage() {
                 {works.data.comics.length ? (
                   <WorkGrid works={works.data.comics} coverage={coverage} />
                 ) : (
-                  <p className="muted">No comics yet.</p>
+                  <p className="muted">No graphic novels yet.</p>
                 )}
                 <p className="field-hint">
                   To adapt existing writing, open a chapter and choose “Adapt to
                   comic”.
                 </p>
+                </div>
               </>
             ) : null}
           </>

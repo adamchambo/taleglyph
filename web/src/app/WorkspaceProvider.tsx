@@ -23,7 +23,7 @@ const recentLabels: [RegExp, string][] = [
 ];
 const sectionLabels: Record<string, string> = {
   stories: "Stories",
-  works: "Novels & comics",
+  works: "Novels & graphic novels",
   world: "World",
   characters: "Characters",
   notes: "Notes",

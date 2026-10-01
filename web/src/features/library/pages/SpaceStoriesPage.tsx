@@ -1,16 +1,22 @@
 import { Link } from "react-router-dom";
 import { useWorkspace } from "../../../app/workspaceContext";
 import { Icon } from "../../../components/ui/Icon";
+import { libraryApi } from "../api/libraryApi";
 import { SpaceRequired } from "../components/SpaceRequired";
 import { StoryCards } from "../components/StoryCards";
 export function SpaceStoriesPage() {
-  const { library } = useWorkspace();
+  const { library, refresh } = useWorkspace();
   return (
     <section className="library-page">
       <SpaceRequired>
         {(space) => {
-          const stories =
-            library?.stories.filter((s) => s.spaceId === space.id) ?? [];
+          const stories = (library?.stories ?? [])
+            .filter((s) => s.spaceId === space.id)
+            .sort((a, b) =>
+              a.order && b.order
+                ? a.order - b.order || a.title.localeCompare(b.title)
+                : 0,
+            );
           return (
             <>
               <div className="library-heading">
@@ -19,7 +25,8 @@ export function SpaceStoriesPage() {
                   <h1>Stories</h1>
                   <p className="intro">
                     A story is what happens. Break it into arcs, then tell it in
-                    as many novels and comics as you like.
+                    as many novels and comics as you like. Position 1 is the top
+                    left, and the next number sits to its right.
                   </p>
                 </div>
                 <Link
@@ -31,7 +38,13 @@ export function SpaceStoriesPage() {
                 </Link>
               </div>
               {stories.length ? (
-                <StoryCards stories={stories} />
+                <StoryCards
+                  stories={stories}
+                  onReorder={async (ids) => {
+                    await libraryApi.reorderStories(space.id, ids);
+                    await refresh();
+                  }}
+                />
               ) : (
                 <div className="library-empty">
                   <Icon name="plan" size={40} />

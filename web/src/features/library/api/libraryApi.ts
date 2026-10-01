@@ -14,6 +14,11 @@ export const libraryApi = {
       method: "PUT",
       body: JSON.stringify(draft),
     }),
+  reorderStories: (spaceId: string, storyIds: string[]) =>
+    apiClient<StoryCard[]>(`/library/spaces/${spaceId}/stories/order`, {
+      method: "PUT",
+      body: JSON.stringify({ storyIds }),
+    }),
   context: (kind: string, id: string, signal?: AbortSignal) =>
     apiClient<{ spaceId: string }>(`/library/context/${kind}/${id}`, {
       signal,

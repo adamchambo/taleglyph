@@ -22,6 +22,14 @@ public sealed class WorldRepository(TalechemyDbContext db) : IWorldRepository
     {
         return await db.Worlds.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct);
     }
+    public async Task<World?> UpdateCastSummaryAsync(Guid id, string summary, CancellationToken ct = default)
+    {
+        var world = await db.Worlds.SingleOrDefaultAsync(x => x.Id == id, ct);
+        if (world is null) return null;
+        world.CastSummary = summary;
+        await db.SaveChangesAsync(ct);
+        return world;
+    }
     public async Task<IReadOnlyList<Character>> GetCharactersAsync(Guid worldId, CancellationToken ct = default)
     {
         return await db.Characters.AsNoTracking().Where(x => x.WorldId == worldId).OrderBy(x => x.Name).ToArrayAsync(ct);

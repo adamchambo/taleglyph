@@ -1,4 +1,5 @@
 [data-theme="light"] {
+  color-scheme: light;
   --bg: #f5f6f8;
   --surface: #fff;
   --text: #222a33;
@@ -836,6 +837,19 @@
   border: 1px solid #ffffff38;
   color: #fff;
 }
+.cast-summary {
+  display: grid;
+  gap: 12px;
+  max-width: 680px;
+}
+.cast-summary .intro {
+  margin: 0;
+}
+.work-shelf + .work-shelf {
+  margin-top: 28px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
 .section-heading {
   display: flex;
   justify-content: space-between;
@@ -1272,8 +1286,22 @@ select.form-control {
   min-width: 0;
 }
 .story-entry {
+  color: inherit;
+}
+.story-entry a {
   text-decoration: none;
   color: inherit;
+}
+.story-position input {
+  width: 52px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
 }
 .story-entry h2 {
   margin: 10px 0 6px;
@@ -1546,6 +1574,21 @@ select.form-control {
 /* One fixed rail; expansion only overlays content. Icon coordinates never change. */
 .studio-shell:not(.nav-focus) .studio-body {
   margin-left: 76px;
+}
+html {
+  --nav-width: 76px;
+  background-color: var(--bg);
+  background-image: linear-gradient(
+    90deg,
+    var(--sidebar) 0 var(--nav-width),
+    transparent var(--nav-width)
+  );
+}
+html:has(.studio-sidebar.is-open) {
+  --nav-width: 244px;
+}
+html:has(.studio-shell.nav-focus) {
+  --nav-width: 0px;
 }
 .studio-shell .studio-sidebar {
   position: fixed;

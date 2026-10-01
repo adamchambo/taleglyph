@@ -7,6 +7,7 @@ public interface ILibraryRepository
     Task<LibrarySnapshot> Snapshot(CancellationToken ct);
     Task<StoryCard?> Card(Guid id, CancellationToken ct);
     Task<Story?> Story(Guid id, CancellationToken ct);
+    Task<List<Story>> Stories(Guid spaceId, CancellationToken ct);
     Task<World?> Space(Guid id, CancellationToken ct);
     Task<Guid?> SpaceFor(string kind, Guid id, CancellationToken ct);
     void Add<T>(T entity) where T:class;

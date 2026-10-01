@@ -153,7 +153,7 @@ test("write, adapt, place artwork, reuse a template, and review changed prose", 
   await page.getByRole("button", { name: "+ Text", exact: true }).click();
   page.once("dialog", (dialog) => dialog.dismiss());
   await page
-    .getByRole("link", { name: "Novels & comics", exact: true })
+    .getByRole("link", { name: "Novels & graphic novels", exact: true })
     .click();
   await expect(
     page.getByRole("button", { name: "Save page", exact: true }),

@@ -1,7 +1,8 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "../../../components/ui/Button";
 import { Icon } from "../../../components/ui/Icon";
+import { Textarea } from "../../../components/ui/Input";
 import { Modal } from "../../../components/ui/Modal";
 import { ResourceState } from "../../../components/ui/ResourceState";
 import { useResource } from "../../../hooks/useResource";
@@ -9,6 +10,77 @@ import { worldApi } from "../api/worldApi";
 import { useCharacters } from "../hooks/useCharacters";
 import { CharacterCard } from "../components/CharacterCard";
 import { CharacterForm } from "../components/CharacterForm";
+import type { World } from "../types";
+function CastSummary({ world }: { world: World }) {
+  const [summary, setSummary] = useState(world.castSummary);
+  const [draft, setDraft] = useState(world.castSummary);
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const saved = await worldApi.updateCastSummary(world.id, draft.trim());
+      setSummary(saved.castSummary);
+      setDraft(saved.castSummary);
+      setEditing(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unable to save the cast summary.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (editing) {
+    return (
+      <form className="cast-summary" onSubmit={save}>
+        <label>
+          Cast summary
+          <Textarea
+            rows={4}
+            maxLength={4000}
+            value={draft}
+            disabled={busy}
+            autoFocus
+            placeholder="Who these characters are, as a cast."
+            onChange={(e) => setDraft(e.target.value)}
+          />
+        </label>
+        {error ? (
+          <p role="alert" className="error">
+            {error}
+          </p>
+        ) : null}
+        <div className="toolbar">
+          <Button type="submit" disabled={busy}>
+            {busy ? "Saving…" : "Save summary"}
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={busy}
+            onClick={() => {
+              setDraft(summary);
+              setEditing(false);
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
+    );
+  }
+  return (
+    <div className="cast-summary">
+      <p className="intro">
+        {summary || "No cast summary yet. This is about the characters, not the story."}
+      </p>
+      <Button variant="secondary" onClick={() => setEditing(true)}>
+        Edit summary
+      </Button>
+    </div>
+  );
+}
 export function WorldDetailPage({
   scopedWorldId,
   charactersOnly = false,
@@ -53,9 +125,9 @@ export function WorldDetailPage({
           {charactersOnly ? (
             <div className="library-heading">
               <div>
-                <p className="eyebrow">Story world</p>
+                <p className="eyebrow">{world.data.name}</p>
                 <h1>Characters</h1>
-                <p className="intro">{world.data.description}</p>
+                <CastSummary key={world.data.id} world={world.data} />
               </div>
               {createButton}
             </div>
@@ -66,7 +138,7 @@ export function WorldDetailPage({
               <p className="intro">{world.data.description}</p>
               <div className="toolbar">
                 <Link className="button" to={`/spaces/${worldId}/works`}>
-                  Novels & comics
+                  Novels & graphic novels
                 </Link>
                 <Link to={`/spaces/${worldId}/assets`}>Browse assets →</Link>
               </div>
