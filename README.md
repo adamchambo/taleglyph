@@ -5,7 +5,7 @@ A connected workspace for worlds, characters, stories, and comic adaptations.
 ## Repository
 
 ```text
-backend/
+server/
   Talechemy.Api/
     Controllers/          HTTP routes and request validation
     Services/             Application workflows; Interfaces/ contains contracts
@@ -24,7 +24,7 @@ backend/
     Validation/           Request validators
     Properties/           Local launch settings
   Talechemy.Tests/         Backend checks
-frontend/
+web/
   public/                 Static assets
   src/
     app/                  Router and providers
@@ -32,14 +32,15 @@ frontend/
     components/           Shared navigation and UI
     features/
       world/              World and character screens, forms, hooks, API, types
-      stories/            Novel workflow scaffold
+      library/            Story library, onboarding, dashboard and appearance
+      stories/            Chapter and scene writing workflow
       comics/             Comic workflow scaffold
       assets/             Asset library scaffold
       explore/            AI playground scaffold
       notes/              Notes scaffold
     hooks/                Shared resource loading
     lib/                  API client and configuration
-    styles/               Stable layouts with fantasy/sci-fi theme variables
+    styles/               Studio shell, appearance tokens and editor styles
     test/                 Unit test setup
   e2e/                    Browser checks
 planning/                 Private planning context; ignored by Git
@@ -60,7 +61,7 @@ Requires .NET 10 SDK, Node 22.12+ and PostgreSQL 18 (or Docker Compose).
 2. Set the API connection string (substitute your local password and port):
 
    ```sh
-   dotnet user-secrets set 'ConnectionStrings:Talechemy' 'Host=localhost;Port=54329;Database=talechemy;Username=talechemy;Password=YOUR_LOCAL_PASSWORD' --project backend/Talechemy.Api
+   dotnet user-secrets set 'ConnectionStrings:Talechemy' 'Host=localhost;Port=54329;Database=talechemy;Username=talechemy;Password=YOUR_LOCAL_PASSWORD' --project server/Talechemy.Api
    ```
 
    On hosted environments use `ConnectionStrings__Talechemy` instead. Never
@@ -70,12 +71,12 @@ Requires .NET 10 SDK, Node 22.12+ and PostgreSQL 18 (or Docker Compose).
    ```sh
    dotnet restore Talechemy.sln
    dotnet tool restore
-   dotnet ef database update --project backend/Talechemy.Api -- --environment Development
+   dotnet ef database update --project server/Talechemy.Api -- --environment Development
    ```
 4. Start the API:
 
    ```sh
-   dotnet run --project backend/Talechemy.Api
+   dotnet run --project server/Talechemy.Api
    ```
 
    API: `http://localhost:5080`. `/api/health` reports process availability only;
@@ -83,13 +84,13 @@ Requires .NET 10 SDK, Node 22.12+ and PostgreSQL 18 (or Docker Compose).
 5. In another terminal:
 
    ```sh
-   cd frontend
+   cd web
    npm ci
    npm run dev
    ```
 
    Open `http://127.0.0.1:5173`. Vite proxies `/api` to localhost:5080.
-   Optional `frontend/.env` settings are described in its `.env.example`.
+   Optional `web/.env` settings are described in its `.env.example`.
 
 ## Implemented scope
 
@@ -101,7 +102,11 @@ Requires .NET 10 SDK, Node 22.12+ and PostgreSQL 18 (or Docker Compose).
 - Save a page as a reusable template with its artwork, text and placements. Reuse creates independent pages/layers.
 - View current prose or the original source snapshot beside each comic page. Changes are flagged for review without overwriting comic work.
 - Explicit saves and unsaved-change navigation guards. This is not autosave or a full history browser.
-- PostgreSQL schema for the remaining worldbuilding entities, plus fantasy/sci-fi themes.
+- Story library, search, space/series grouping, artwork covers, editable overview/tags and preferred starting section.
+- Name-only onboarding with automatic space creation; direct blank comic creation.
+- Story dashboard, persistent expanded/rail/focus navigation and story context in existing editors.
+- Light/dark appearance, accents and restrained decoration, separate from genre/tone tags.
+- PostgreSQL schema for the remaining worldbuilding entities.
 
 The current mapping is one selected scene per comic page, in chapter order. Pages
 can have 1–12 panels; layers use percentage positions and widths. Fine-grained
@@ -113,7 +118,7 @@ proposal-review step before persistence; no AI service is called by this flow.
 `AdaptationLink` preserves source prose/title/revision and separately tracks the
 revision reviewed by the creator. EF commits each adaptation/page save atomically.
 
-Images are stored outside source code in `backend/Talechemy.Api/App_Data/uploads/`
+Images are stored outside source code in `server/Talechemy.Api/App_Data/uploads/`
 (ignored by Git), with metadata in PostgreSQL. Configure `Storage:AssetDirectory`
 to change this location. Back up both the database and uploaded files. Object
 storage, authentication, collaboration and publishing are not implemented.
@@ -141,7 +146,7 @@ machine-local convenience, not a deployment configuration.
 ```sh
 dotnet build Talechemy.sln
 dotnet test Talechemy.sln
-cd frontend
+cd web
 npm run build
 npm run lint
 npm test
@@ -151,10 +156,10 @@ npm run test:e2e
 
 The default browser check tests the shell with a mocked API. The full adaptation
 check runs only with `TALECHEMY_LIVE_TESTS=1` and creates test worlds through the
-real API. Point Vite's proxy at a disposable test API/database before running it.
+real API. Supply a disposable test API/database using `TALECHEMY_TEST_API`; browser requests are routed to it without changing the local app proxy.
 
 ```sh
-TALECHEMY_LIVE_TESTS=1 npm run test:e2e
+TALECHEMY_LIVE_TESTS=1 TALECHEMY_TEST_API=http://127.0.0.1:5087/api npm run test:e2e
 ```
 
 A standalone backend integration check creates test worlds and verifies source
@@ -162,12 +167,27 @@ snapshots, template independence, invalid selections, foreign-world rejection an
 stale writes. It deletes nothing. From the repository root, with a disposable API:
 
 ```sh
-TALECHEMY_TEST_API=http://127.0.0.1:5087/api python3 backend/Talechemy.Tests/Integration/verify_workflow.py
+TALECHEMY_TEST_API=http://127.0.0.1:5087/api python3 server/Talechemy.Tests/Integration/verify_workflow.py
+TALECHEMY_TEST_API=http://127.0.0.1:5087/api python3 server/Talechemy.Tests/Integration/verify_library.py
 ```
 
 If Chromium is already installed elsewhere, the Playwright configuration accepts
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` instead of downloading another copy.
 
 To add a schema change: update an entity and its EF configuration, then run
-`dotnet ef migrations add DESCRIPTIVE_NAME --project backend/Talechemy.Api --output-dir Data/Migrations -- --environment Development`.
+`dotnet ef migrations add DESCRIPTIVE_NAME --project server/Talechemy.Api --output-dir Data/Migrations -- --environment Development`.
 Inspect the generated migration before applying it with `database update`.
+
+## Story-first overhaul — Checkpoint A
+
+The new library and shell are ready for visual review. `World` records currently
+back the Space API, retaining their existing IDs. The additive `StoryLibrary`
+migration adds metadata, series membership and cover references. Story detail
+writes use a revision token; invalid cross-space artwork/series links are rejected.
+Navigation/appearance/recent-work preferences are local to the device.
+
+Notes/tasks and Story plan show labelled upcoming sections. Separate novel
+records, story-specific character participation, relationship graphs, maps,
+timelines, structured writing/instructions and enhanced canvas interaction remain
+for checkpoints B/C. No AI generation is simulated. The full approved scope and
+checkpoint criteria are in ignored `planning/story-first-overhaul.md`.
