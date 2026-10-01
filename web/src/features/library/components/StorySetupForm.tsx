@@ -1,3 +1,4 @@
+import { CoverPicker } from "./CoverPicker";
 import { Button } from "../../../components/ui/Button";
 import { Input, Textarea } from "../../../components/ui/Input";
 import { useEffect, useId, useState, type FormEvent } from "react";
@@ -55,6 +56,7 @@ export function StorySetupForm({
   const [draft, setDraft] = useState<StorySetup>(() => ({
     title: initial?.title ?? "",
     overview: initial?.overview ?? "",
+    coverAssetId: initial?.coverAssetId ?? null,
     spaceId,
     tags: initial?.tags ?? [],
     revision: initial?.revision ?? 1,
@@ -159,6 +161,12 @@ export function StorySetupForm({
         </div>
         {initial ? (
           <div className="setup-step">
+            <h2>Cover artwork</h2>
+            <CoverPicker
+              spaceId={spaceId}
+              value={draft.coverAssetId ?? null}
+              onChange={(coverAssetId) => edit({ coverAssetId })}
+            />
             <h2>Tags</h2>
             <div className="tag-field">
               <p className="field-hint">Choose several, or add your own.</p>

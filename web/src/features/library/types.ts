@@ -16,6 +16,7 @@ export type StoryCard = {
   spaceName: string;
   title: string;
   overview: string;
+  coverAssetId: string | null;
   tags: string[];
   updatedAt: string;
   revision: number;
@@ -29,6 +30,7 @@ export type LibrarySnapshot = {
 export type StorySetup = {
   title: string;
   overview: string;
+  coverAssetId?: string | null;
   spaceId: string;
   tags: string[];
   revision: number;

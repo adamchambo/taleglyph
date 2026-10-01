@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Talechemy.Api.Models.World;
+using Talechemy.Api.Models.Assets;
 using Talechemy.Api.Models.Stories;
 namespace Talechemy.Api.Data.Configurations;
 
@@ -16,6 +17,7 @@ public sealed class StoryConfiguration : IEntityTypeConfiguration<Story>
         builder.Property(x => x.Title).IsRequired().HasMaxLength(120);
         builder.Property(x => x.Synopsis).IsRequired();
         builder.HasOne<World>().WithMany().HasForeignKey(x => x.WorldId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Asset>().WithMany().HasForeignKey(x => x.CoverAssetId).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(x => new { x.WorldId, x.Order }).IsUnique();
     }
 }

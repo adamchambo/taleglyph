@@ -1,3 +1,4 @@
+import { StoryArtwork } from "./StoryArtwork";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { overviewTags } from "../storyTags";
@@ -48,6 +49,14 @@ export function StoryCards({
           const position = story.order || index + 1;
           return (
             <article className="card story-entry" key={story.id}>
+              <Link to={storyPath(story)} aria-label={`Open ${story.title}`}>
+                <StoryArtwork
+                  key={story.coverAssetId}
+                  assetId={story.coverAssetId}
+                  title={story.title}
+                  variant={index}
+                />
+              </Link>
               <div className="tile-kicker">
                 <label className="story-position">
                   <span className="sr-only">

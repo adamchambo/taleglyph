@@ -31,9 +31,7 @@ function WorkGrid({
           />
           <div className="story-tile-body">
             <div className="tile-kicker">
-              <span>
-                {work.kind === "novel" ? "Novel" : "Graphic novel"}
-              </span>
+              <span>{work.kind === "novel" ? "Novel" : "Graphic novel"}</span>
             </div>
             <h2>{work.title}</h2>
             <p>{coverage(work)}</p>
@@ -101,72 +99,78 @@ export function WorksPage() {
             />
             {works.data ? (
               <>
-                <div className="work-shelf">
-                <div className="section-heading">
-                  <h2>Novels</h2>
-                  <Button
-                    className="primary-create"
-                    aria-expanded={novelOpen}
-                    aria-controls="novel-create"
-                    onClick={() => setNovelOpen((open) => !open)}
-                  >
-                    <Icon name="plus" size={18} />
-                    New novel
-                  </Button>
-                </div>
-                {novelOpen ? (
-                  <div className="create-panel" id="novel-create">
-                    <TitleForm
-                      label="Novel title"
-                      action="Add novel"
-                      onCreate={async (title) => {
-                        await create("novel", title);
-                        setNovelOpen(false);
-                      }}
-                    />
+                <section
+                  className="work-shelf"
+                  aria-labelledby="novels-heading"
+                >
+                  <div className="section-heading">
+                    <h2 id="novels-heading">Novels</h2>
+                    <Button
+                      className="primary-create"
+                      aria-expanded={novelOpen}
+                      aria-controls="novel-create"
+                      onClick={() => setNovelOpen((open) => !open)}
+                    >
+                      <Icon name="plus" size={18} />
+                      New novel
+                    </Button>
                   </div>
-                ) : null}
-                {works.data.novels.length ? (
-                  <WorkGrid works={works.data.novels} coverage={coverage} />
-                ) : (
-                  <p className="muted">No novels yet.</p>
-                )}
-                </div>
-                <div className="work-shelf">
-                <div className="section-heading">
-                  <h2>Graphic novels</h2>
-                  <Button
-                    className="primary-create"
-                    aria-expanded={graphicOpen}
-                    aria-controls="graphic-create"
-                    onClick={() => setGraphicOpen((open) => !open)}
-                  >
-                    <Icon name="plus" size={18} />
-                    New graphic novel
-                  </Button>
-                </div>
-                {graphicOpen ? (
-                  <div className="create-panel" id="graphic-create">
-                    <TitleForm
-                      label="Graphic novel title"
-                      action="Add graphic novel"
-                      onCreate={async (title) => {
-                        await create("comic", title);
-                        setGraphicOpen(false);
-                      }}
-                    />
+                  {novelOpen ? (
+                    <div className="create-panel" id="novel-create">
+                      <TitleForm
+                        label="Novel title"
+                        action="Add novel"
+                        onCreate={async (title) => {
+                          await create("novel", title);
+                          setNovelOpen(false);
+                        }}
+                      />
+                    </div>
+                  ) : null}
+                  {works.data.novels.length ? (
+                    <WorkGrid works={works.data.novels} coverage={coverage} />
+                  ) : (
+                    <p className="muted">No novels yet.</p>
+                  )}
+                </section>
+                <section
+                  className="work-shelf"
+                  aria-labelledby="graphic-novels-heading"
+                >
+                  <div className="section-heading">
+                    <h2 id="graphic-novels-heading">Graphic novels</h2>
+                    <Button
+                      className="primary-create"
+                      aria-expanded={graphicOpen}
+                      aria-controls="graphic-create"
+                      onClick={() => setGraphicOpen((open) => !open)}
+                    >
+                      <Icon name="plus" size={18} />
+                      New graphic novel
+                    </Button>
                   </div>
-                ) : null}
-                {works.data.comics.length ? (
-                  <WorkGrid works={works.data.comics} coverage={coverage} />
-                ) : (
-                  <p className="muted">No graphic novels yet.</p>
-                )}
-                <p className="field-hint">
-                  To adapt existing writing, open a chapter and choose “Adapt to
-                  comic”.
-                </p>
-                </div>
+                  {graphicOpen ? (
+                    <div className="create-panel" id="graphic-create">
+                      <TitleForm
+                        label="Graphic novel title"
+                        action="Add graphic novel"
+                        onCreate={async (title) => {
+                          await create("comic", title);
+                          setGraphicOpen(false);
+                        }}
+                      />
+                    </div>
+                  ) : null}
+                  {works.data.comics.length ? (
+                    <WorkGrid works={works.data.comics} coverage={coverage} />
+                  ) : (
+                    <p className="muted">No graphic novels yet.</p>
+                  )}
+                  <p className="field-hint">
+                    To adapt existing writing, open a chapter and choose “Adapt
+                    to comic”.
+                  </p>
+                </section>
               </>
             ) : null}
           </>

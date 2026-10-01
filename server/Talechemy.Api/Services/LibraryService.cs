@@ -9,6 +9,7 @@ public sealed class LibraryService(ILibraryRepository repo)
     public async Task<StoryCard> Create(StorySetupRequest request,CancellationToken ct)
     {
         var space=await repo.Space(request.SpaceId,ct)??throw new WorkflowException(404,"Space not found.");
+        await ValidateCover(request.CoverAssetId, request.SpaceId, ct);
         Validate(request);
         var existing=await repo.Stories(space.Id,ct);
         var story=new Story {Id=Guid.NewGuid(),WorldId=space.Id,Order=existing.Select(x=>x.Order).DefaultIfEmpty().Max()+1};Apply(story,request);
@@ -19,8 +20,16 @@ public sealed class LibraryService(ILibraryRepository repo)
         var story=await repo.Story(id,ct)??throw new WorkflowException(404,"Story not found.");
         if(story.Revision!=request.Revision)throw new WorkflowException(409,"Story details changed elsewhere. Keep your draft and reload before retrying.");
         if(request.SpaceId!=story.WorldId)throw new WorkflowException(400,"Moving an existing story between spaces is not supported yet.");
+        await ValidateCover(request.CoverAssetId, request.SpaceId, ct);
         Validate(request);Apply(story,request);story.Revision++;
         await repo.Save(ct);return await Card(id,ct);
+    }
+    private async Task ValidateCover(Guid? assetId, Guid spaceId, CancellationToken ct)
+    {
+        if (assetId is not { } id) return;
+        var asset = await repo.Asset(id, ct);
+        if (asset is null || asset.WorldId != spaceId || asset.ImageFileName is null)
+            throw new WorkflowException(400, "Choose cover artwork from this space.");
     }
     private static void Validate(StorySetupRequest r)
     {
@@ -29,6 +38,7 @@ public sealed class LibraryService(ILibraryRepository repo)
     private static void Apply(Story story,StorySetupRequest r)
     {
         story.Title=r.Title.Trim();story.Synopsis=r.Overview.Trim();story.Tags=r.Tags.Select(x=>x.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        story.CoverAssetId=r.CoverAssetId;
         story.UpdatedAt=DateTimeOffset.UtcNow;
     }
     public async Task<StoryCard[]> Reorder(Guid spaceId, Guid[] ids, CancellationToken ct)
