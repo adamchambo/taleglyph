@@ -2,8 +2,10 @@ import { useCallback, useState, type FormEvent } from "react";
 import { useParams } from "react-router-dom";
 import { useWorkspace } from "../../../app/workspaceContext";
 import { Button } from "../../../components/ui/Button";
+import { Icon } from "../../../components/ui/Icon";
 import { Input, Textarea } from "../../../components/ui/Input";
 import { ResourceState } from "../../../components/ui/ResourceState";
+import { useOpenWhenEmpty } from "../../../hooks/useOpenWhenEmpty";
 import { useResource } from "../../../hooks/useResource";
 import { spaceApi } from "../../library/api/spaceApi";
 import { CoverageEditor } from "../../library/components/CoverageEditor";
@@ -150,25 +152,55 @@ function NoteCard({
     </article>
   );
 }
-function Notes({ notes: initial }: { notes: Note[] }) {
+function Notes({
+  notes: initial,
+  spaceName,
+}: {
+  notes: Note[];
+  spaceName: string;
+}) {
   const { spaceId = "" } = useParams();
   const { library, refresh } = useWorkspace();
   const graph = useStoryGraph(spaceId);
   const [notes, setNotes] = useState(initial);
   const stories = library?.stories.filter((s) => s.spaceId === spaceId) ?? [];
+  const [creating, toggleCreating, closeCreating] = useOpenWhenEmpty(
+    notes.length === 0,
+  );
   return (
     <>
-      <details className="note-create" open={!notes.length}>
-        <summary>New note</summary>
-        <NoteForm
-          action="Add note"
-          onSubmit={async (draft) => {
-            const note = await spaceApi.createNote(spaceId, draft);
-            setNotes((items) => [note, ...items]);
-            void refresh();
-          }}
-        />
-      </details>
+      <div className="library-heading">
+        <div>
+          <p className="eyebrow">{spaceName}</p>
+          <h1>Notes</h1>
+          <p className="intro">
+            Notes belong to the whole space. Link one to the stories or arcs it
+            is about.
+          </p>
+        </div>
+        <Button
+          className="primary-create"
+          aria-expanded={creating}
+          aria-controls="note-create"
+          onClick={toggleCreating}
+        >
+          <Icon name="plus" size={18} />
+          New note
+        </Button>
+      </div>
+      {creating ? (
+        <div className="create-panel" id="note-create">
+          <NoteForm
+            action="Add note"
+            onSubmit={async (draft) => {
+              const note = await spaceApi.createNote(spaceId, draft);
+              setNotes((items) => [note, ...items]);
+              closeCreating();
+              void refresh();
+            }}
+          />
+        </div>
+      ) : null}
       <ResourceState
         loading={graph.loading}
         error={graph.error}
@@ -202,22 +234,25 @@ export function NotesPage() {
   return (
     <section className="library-page">
       <SpaceRequired>
-        {(space) => (
-          <>
-            <p className="eyebrow">{space.name}</p>
-            <h1>Notes</h1>
-            <p className="intro">
-              Notes belong to the whole space. Link one to the stories or arcs
-              it is about.
-            </p>
-            <ResourceState
-              loading={notes.loading}
-              error={notes.error}
-              retry={notes.reload}
-            />
-            {notes.data ? <Notes key={spaceId} notes={notes.data} /> : null}
-          </>
-        )}
+        {(space) =>
+          notes.data ? (
+            <Notes key={spaceId} notes={notes.data} spaceName={space.name} />
+          ) : (
+            <>
+              <p className="eyebrow">{space.name}</p>
+              <h1>Notes</h1>
+              <p className="intro">
+                Notes belong to the whole space. Link one to the stories or arcs
+                it is about.
+              </p>
+              <ResourceState
+                loading={notes.loading}
+                error={notes.error}
+                retry={notes.reload}
+              />
+            </>
+          )
+        }
       </SpaceRequired>
     </section>
   );

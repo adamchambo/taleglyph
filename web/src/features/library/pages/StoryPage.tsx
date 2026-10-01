@@ -99,7 +99,9 @@ function Arcs({ story, initial }: { story: StoryCard; initial: Arc[] }) {
   const [editing, setEditing] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [creating, toggleCreating] = useOpenWhenEmpty(arcs.length === 0);
+  const [creating, toggleCreating, closeCreating] = useOpenWhenEmpty(
+    arcs.length === 0,
+  );
   async function run(action: () => Promise<void>) {
     setBusy(true);
     setError("");
@@ -154,6 +156,7 @@ function Arcs({ story, initial }: { story: StoryCard; initial: Arc[] }) {
             onSubmit={async (draft) => {
               const arc = await spaceApi.createArc(story.id, draft);
               setArcs((items) => [...items, arc]);
+              closeCreating();
               void refresh();
             }}
           />

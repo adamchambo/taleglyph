@@ -100,6 +100,7 @@ test("space hub, story arcs, linked comic, notes and context survive reload", as
   await expect(page.getByLabel("Arc title", { exact: true })).toBeVisible();
   await page.getByLabel("Arc title", { exact: true }).fill("The crossing");
   await page.getByRole("button", { name: "Add arc", exact: true }).click();
+  await page.getByRole("button", { name: "New arc", exact: true }).click();
   await page.getByLabel("Arc title", { exact: true }).fill("The return");
   await page.getByRole("button", { name: "Add arc", exact: true }).click();
   await page

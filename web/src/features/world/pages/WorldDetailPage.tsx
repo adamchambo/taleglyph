@@ -1,9 +1,9 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "../../../components/ui/Button";
 import { Icon } from "../../../components/ui/Icon";
+import { Modal } from "../../../components/ui/Modal";
 import { ResourceState } from "../../../components/ui/ResourceState";
-import { useOpenWhenEmpty } from "../../../hooks/useOpenWhenEmpty";
 import { useResource } from "../../../hooks/useResource";
 import { worldApi } from "../api/worldApi";
 import { useCharacters } from "../hooks/useCharacters";
@@ -26,13 +26,13 @@ export function WorldDetailPage({
   );
   const characters = useCharacters(worldId);
   const castEmpty = characters.data ? characters.data.length === 0 : undefined;
-  const [creating, toggleCreating] = useOpenWhenEmpty(castEmpty);
+  const [creating, setCreating] = useState(false);
   const createButton = (
     <Button
       className="primary-create"
       aria-expanded={creating}
-      aria-controls="character-create"
-      onClick={toggleCreating}
+      aria-haspopup="dialog"
+      onClick={() => setCreating(true)}
     >
       <Icon name="plus" size={18} />
       New character
@@ -77,14 +77,17 @@ export function WorldDetailPage({
             </>
           )}
           {creating ? (
-            <div className="create-panel" id="character-create">
+            <Modal title="New character" onClose={() => setCreating(false)}>
               <CharacterForm
+                showLegend={false}
+                onCancel={() => setCreating(false)}
                 onSubmit={async (input) => {
                   await worldApi.createCharacter(worldId, input);
                   characters.reload();
+                  setCreating(false);
                 }}
               />
-            </div>
+            </Modal>
           ) : null}
           <ResourceState
             loading={characters.loading}

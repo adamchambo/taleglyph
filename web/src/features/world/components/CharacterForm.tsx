@@ -11,11 +11,15 @@ const empty: CharacterInput = {
 export function CharacterForm({
   initial = empty,
   onSubmit,
+  onCancel,
   label = "Create character",
+  showLegend = true,
 }: {
   initial?: CharacterInput;
   onSubmit: (input: CharacterInput) => Promise<void>;
+  onCancel?: () => void;
   label?: string;
+  showLegend?: boolean;
 }) {
   const [form, setForm] = useState<CharacterInput>(initial);
   const [busy, setBusy] = useState(false);
@@ -38,11 +42,13 @@ export function CharacterForm({
   return (
     <form className="form" onSubmit={submit}>
       <fieldset disabled={busy}>
-        <legend>{label}</legend>
+        {showLegend ? <legend>{label}</legend> : null}
         <label>
           Name
           <input
             required
+            autoFocus={!initial.name}
+            data-autofocus={initial.name ? undefined : ""}
             maxLength={120}
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -92,7 +98,14 @@ export function CharacterForm({
             {error}
           </p>
         ) : null}
-        <Button type="submit">{busy ? "Saving…" : label}</Button>
+        <div className="toolbar">
+          <Button type="submit">{busy ? "Saving…" : label}</Button>
+          {onCancel ? (
+            <Button variant="secondary" onClick={onCancel}>
+              Cancel
+            </Button>
+          ) : null}
+        </div>
       </fieldset>
     </form>
   );

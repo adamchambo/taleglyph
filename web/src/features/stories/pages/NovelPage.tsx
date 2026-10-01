@@ -19,7 +19,9 @@ function Novel({ data }: { data: NovelWorkspace }) {
   const graph = useStoryGraph(data.novel.spaceId);
   const [novel, setNovel] = useState(data.novel);
   const [detailsDirty, setDetailsDirty] = useState(false);
-  const [adding, toggleAdding] = useOpenWhenEmpty(data.chapters.length === 0);
+  const [adding, toggleAdding, closeAdding] = useOpenWhenEmpty(
+    data.chapters.length === 0,
+  );
   useUnsavedChanges(detailsDirty);
   return (
     <>
@@ -61,7 +63,11 @@ function Novel({ data }: { data: NovelWorkspace }) {
             label="Chapter title"
             action="Add chapter"
             onCreate={async (title) => {
-              const chapter = await manuscriptApi.createChapter(novel.id, title);
+              const chapter = await manuscriptApi.createChapter(
+                novel.id,
+                title,
+              );
+              closeAdding();
               navigate(`/chapters/${chapter.id}`);
             }}
           />

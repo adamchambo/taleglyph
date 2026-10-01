@@ -65,8 +65,8 @@ export function WorksPage() {
   const stories = library?.stories.filter((s) => s.spaceId === spaceId) ?? [];
   const novelsEmpty = works.data ? works.data.novels.length === 0 : undefined;
   const comicsEmpty = works.data ? works.data.comics.length === 0 : undefined;
-  const [novelOpen, toggleNovel] = useOpenWhenEmpty(novelsEmpty);
-  const [comicOpen, toggleComic] = useOpenWhenEmpty(comicsEmpty);
+  const [novelOpen, toggleNovel, closeNovel] = useOpenWhenEmpty(novelsEmpty);
+  const [comicOpen, toggleComic, closeComic] = useOpenWhenEmpty(comicsEmpty);
   function coverage(work: WorkCard) {
     const own =
       graph.data?.links.filter(
@@ -118,7 +118,10 @@ export function WorksPage() {
                     <TitleForm
                       label="Novel title"
                       action="Add novel"
-                      onCreate={(title) => create("novel", title)}
+                      onCreate={async (title) => {
+                        await create("novel", title);
+                        closeNovel();
+                      }}
                     />
                   </div>
                 ) : null}
@@ -144,7 +147,10 @@ export function WorksPage() {
                     <TitleForm
                       label="Comic title"
                       action="Create blank comic"
-                      onCreate={(title) => create("comic", title)}
+                      onCreate={async (title) => {
+                        await create("comic", title);
+                        closeComic();
+                      }}
                     />
                   </div>
                 ) : null}
