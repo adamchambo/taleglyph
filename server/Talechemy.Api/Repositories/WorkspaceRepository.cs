@@ -10,10 +10,12 @@ public sealed class WorkspaceRepository(TalechemyDbContext db) : IWorkspaceRepos
 {
     public Task<bool> WorldExists(Guid id, CancellationToken ct) => db.Worlds.AnyAsync(x => x.Id == id, ct);
     public Task<Story?> Story(Guid id, CancellationToken ct) => db.Stories.SingleOrDefaultAsync(x => x.Id == id, ct);
+    public Task<Novel?> Novel(Guid id, CancellationToken ct) => db.Novels.SingleOrDefaultAsync(x => x.Id == id, ct);
+    public Task<Chapter[]> Chapters(Guid novelId, CancellationToken ct) => db.Chapters.AsNoTracking().Where(x => x.NovelId == novelId).OrderBy(x => x.Order).ToArrayAsync(ct);
     public Task<Chapter?> Chapter(Guid id, CancellationToken ct) => db.Chapters.SingleOrDefaultAsync(x => x.Id == id, ct);
     public Task<Scene?> Scene(Guid id, CancellationToken ct) => db.Scenes.SingleOrDefaultAsync(x => x.Id == id, ct);
     public Task<Scene[]> Scenes(Guid chapterId, CancellationToken ct) => db.Scenes.Where(x => x.ChapterId == chapterId).OrderBy(x => x.Order).ToArrayAsync(ct);
-    public async Task<int> NextChapterOrder(Guid storyId, CancellationToken ct) => (await db.Chapters.Where(x => x.StoryId == storyId).MaxAsync(x => (int?)x.Order, ct) ?? 0) + 1;
+    public async Task<int> NextChapterOrder(Guid novelId, CancellationToken ct) => (await db.Chapters.Where(x => x.NovelId == novelId).MaxAsync(x => (int?)x.Order, ct) ?? 0) + 1;
     public Task<Comic?> Comic(Guid id, CancellationToken ct) => db.Comics.SingleOrDefaultAsync(x => x.Id == id, ct);
     public Task<ComicPage?> Page(Guid id, CancellationToken ct) => db.ComicPages.SingleOrDefaultAsync(x => x.Id == id, ct);
     public Task<ComicPage[]> Pages(Guid comicId, CancellationToken ct) => db.ComicPages.Where(x => x.ComicId == comicId).OrderBy(x => x.Number).ToArrayAsync(ct);

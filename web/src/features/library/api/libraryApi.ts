@@ -1,4 +1,5 @@
 import { apiClient } from "../../../lib/apiClient";
+import type { Novel } from "../../stories/types";
 import type {
   LibrarySnapshot,
   StoryCard,
@@ -29,6 +30,13 @@ export const libraryApi = {
       `/library/context/${kind}/${id}`,
       { signal },
     ),
+  novels: (id: string, signal?: AbortSignal) =>
+    apiClient<Novel[]>(`/library/stories/${id}/novels`, { signal }),
+  createNovel: (id: string, title: string) =>
+    apiClient<Novel>(`/library/stories/${id}/novels`, {
+      method: "POST",
+      body: JSON.stringify({ title }),
+    }),
   createComic: (id: string, title: string) =>
     apiClient<{ id: string }>(`/library/stories/${id}/comics`, {
       method: "POST",

@@ -4,6 +4,16 @@ export type Story = {
   title: string;
   synopsis: string;
 };
+export type Novel = {
+  id: string;
+  storyId: string;
+  title: string;
+  chapterCount: number;
+};
+export type NovelWorkspace = {
+  novel: Novel;
+  chapters: Chapter[];
+};
 export type Chapter = {
   id: string;
   storyId: string;

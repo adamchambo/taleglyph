@@ -82,20 +82,21 @@ test("story onboarding, comic-first creation, settings and context survive reloa
     errors.push(dialog.message());
     await dialog.dismiss();
   });
-  await page.goto("/stories/new");
+  const spaceName = `Browser space ${Date.now()}`;
   const name = `Browser story ${Date.now()}`;
+  await page.goto("/spaces/new");
+  await page.getByLabel("Space name", { exact: true }).fill(spaceName);
+  await page.getByRole("button", { name: "Create space", exact: true }).click();
+  await expect(page).toHaveURL(/\/spaces\/[a-f0-9-]+$/);
+  await page.getByRole("link", { name: "New story", exact: true }).click();
   await page.getByLabel("Story name", { exact: true }).fill(name);
   await page
     .getByLabel("Brief story overview", { exact: false })
     .fill("A journey through a changing forest.");
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
-  await page.getByRole("button", { name: "Fantasy", exact: true }).click();
-  await page.getByRole("button", { name: "Hopeful", exact: true }).click();
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
-  await page.getByRole("radio", { name: "Comic", exact: true }).check();
   await page.getByRole("button", { name: "Create story", exact: true }).click();
-  await expect(page).toHaveURL(/\/stories\/[a-f0-9-]+\/comic$/);
-  const storyId = page.url().split("/").at(-2)!;
+  await expect(page).toHaveURL(/\/stories\/[a-f0-9-]+$/);
+  const storyId = page.url().split("/").at(-1)!;
+  await page.goto(`/stories/${storyId}/comic`);
   await expect(page.getByLabel("Switch story")).toHaveValue(storyId);
   await page
     .getByLabel("Comic title", { exact: true })
@@ -108,18 +109,20 @@ test("story onboarding, comic-first creation, settings and context survive reloa
   await page.reload();
   await expect(page.getByLabel("Switch story")).toHaveValue(storyId);
   await page.goto(`/stories/${storyId}/settings`);
-  await expect(
-    page.getByRole("button", { name: "Fantasy", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Fantasy", exact: true }).click();
   await page.getByLabel("Story name", { exact: true }).fill(name + " revised");
   await page
     .getByRole("button", { name: "Save story details", exact: true })
     .click();
   await expect(page.getByRole("status")).toHaveText("Story details saved.");
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "Fantasy", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await page.goto("/library");
   await page.getByLabel("Search stories").fill(name + " revised");
   await expect(page.locator(".story-tile")).toHaveCount(1);
   await page.getByLabel("Group by").selectOption("space");
-  await expect(page.locator(".group-heading")).toHaveText(name);
+  await expect(page.locator(".group-heading")).toHaveText(spaceName);
   expect(errors).toEqual([]);
 });

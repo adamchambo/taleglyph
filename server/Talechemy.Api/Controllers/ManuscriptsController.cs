@@ -8,7 +8,9 @@ public sealed class ManuscriptsController(AuthoringService service) : Controller
 {
     [HttpPost("stories")]
     public async Task<IActionResult> Story(CreateStoryRequest request, CancellationToken ct) => Ok(await service.CreateStory(request, ct));
-    [HttpPost("stories/{id:guid}/chapters")]
+    [HttpGet("novels/{id:guid}")]
+    public async Task<IActionResult> Novel(Guid id, CancellationToken ct) => Ok(await service.GetNovel(id, ct));
+    [HttpPost("novels/{id:guid}/chapters")]
     public async Task<IActionResult> Chapter(Guid id, TitleRequest request, CancellationToken ct) => Ok(await service.CreateChapter(id, request, ct));
     [HttpGet("chapters/{id:guid}")]
     public async Task<IActionResult> GetChapter(Guid id, CancellationToken ct) => Ok(await service.GetChapter(id, ct));

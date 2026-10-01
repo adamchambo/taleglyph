@@ -83,8 +83,8 @@ export function Sidebar() {
         ) : (
           <div className="sidebar-invitation nav-label">
             <p>A place for every part of your story.</p>
-            <Link to="/stories/new">
-              Begin something new <Icon name="arrow" size={15} />
+            <Link to="/spaces/new">
+              Begin a space <Icon name="arrow" size={15} />
             </Link>
           </div>
         )}

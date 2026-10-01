@@ -1,13 +1,11 @@
 import { useCallback } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useResource } from "../../../hooks/useResource";
 import { ResourceState } from "../../../components/ui/ResourceState";
-import { TitleForm } from "../../../components/ui/TitleForm";
 import { manuscriptApi } from "../api/manuscriptApi";
 import { comicApi } from "../../comics/api/comicApi";
 export function StoryDetailPage() {
   const { storyId = "" } = useParams();
-  const navigate = useNavigate();
   const load = useResource(
     useCallback(
       async (s: AbortSignal) => {
@@ -50,17 +48,11 @@ export function StoryDetailPage() {
               {!load.data.chapters.length ? (
                 <p>Your first chapter starts here.</p>
               ) : null}
-              <TitleForm
-                label="Chapter title"
-                action="Add chapter"
-                onCreate={async (title) => {
-                  const chapter = await manuscriptApi.createChapter(
-                    storyId,
-                    title,
-                  );
-                  navigate(`/chapters/${chapter.id}`);
-                }}
-              />
+              <p>
+                <Link to={`/stories/${storyId}/novel`}>
+                  Add a novel, then its chapters.
+                </Link>
+              </p>
             </div>
             <aside className="card">
               <h2>Comic adaptations</h2>

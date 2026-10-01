@@ -4,7 +4,7 @@ public sealed record SpaceSummary(Guid Id, string Name, string Description);
 public sealed record SeriesSummary(Guid Id, Guid SpaceId, string Name);
 public sealed record StoryCard(Guid Id, Guid SpaceId, string SpaceName, string Title, string Overview, string[] Tags,
     Guid? SeriesId, string? SeriesName, Guid? CoverAssetId, DateTimeOffset UpdatedAt, string StartingSection, int Revision,
-    int ChapterCount, int ComicCount, int CharacterCount, int AssetCount);
+    int ChapterCount, int ComicCount, int CharacterCount, int AssetCount, int NovelCount);
 public sealed record LibrarySnapshot(IReadOnlyList<StoryCard> Stories, IReadOnlyList<SpaceSummary> Spaces, IReadOnlyList<SeriesSummary> Series);
 public sealed class StorySetupRequest
 {

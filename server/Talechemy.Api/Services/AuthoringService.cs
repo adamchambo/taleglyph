@@ -13,11 +13,17 @@ public sealed class AuthoringService(IWorkspaceRepository repo)
         var story = new Story { Id = Guid.NewGuid(), WorldId = request.WorldId, Title = request.Title.Trim(), Synopsis = request.Synopsis.Trim() };
         repo.Add(story); await repo.Save(ct); return story.ToResponse();
     }
-    public async Task<ChapterResponse> CreateChapter(Guid storyId, TitleRequest request, CancellationToken ct)
+    public async Task<ChapterResponse> CreateChapter(Guid novelId, TitleRequest request, CancellationToken ct)
     {
-        _ = await repo.Story(storyId, ct) ?? throw new WorkflowException(404, "Story not found.");
-        var chapter = new Chapter { Id = Guid.NewGuid(), StoryId = storyId, Title = request.Title.Trim(), Order = await repo.NextChapterOrder(storyId, ct) };
+        var novel = await repo.Novel(novelId, ct) ?? throw new WorkflowException(404, "Novel not found.");
+        var chapter = new Chapter { Id = Guid.NewGuid(), StoryId = novel.StoryId, NovelId = novel.Id, Title = request.Title.Trim(), Order = await repo.NextChapterOrder(novel.Id, ct) };
         repo.Add(chapter); await repo.Save(ct); return chapter.ToResponse();
+    }
+    public async Task<NovelWorkspace> GetNovel(Guid id, CancellationToken ct)
+    {
+        var novel = await repo.Novel(id, ct) ?? throw new WorkflowException(404, "Novel not found.");
+        var chapters = await repo.Chapters(id, ct);
+        return new(new NovelResponse(novel.Id, novel.StoryId, novel.Title, chapters.Length), chapters.Select(x => x.ToResponse()).ToArray());
     }
     public async Task<ChapterWorkspace> GetChapter(Guid id, CancellationToken ct)
     {

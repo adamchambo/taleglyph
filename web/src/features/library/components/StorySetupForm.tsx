@@ -6,13 +6,7 @@ import { useWorkspace } from "../../../app/workspaceContext";
 import { useUnsavedChanges } from "../../../hooks/useUnsavedChanges";
 import { Icon } from "../../../components/ui/Icon";
 import { libraryApi } from "../api/libraryApi";
-import {
-  sections,
-  sectionPath,
-  type StoryCard,
-  type StorySetup,
-  type Section,
-} from "../types";
+import { sectionPath, type StoryCard, type StorySetup } from "../types";
 import type { Asset } from "../../assets/types";
 import { AssetUploader } from "../../assets/components/AssetUploader";
 const genres = [
@@ -82,16 +76,18 @@ function TagChoices({
 export function StorySetupForm({
   initial,
   assets = [],
+  spaceId = null,
 }: {
   initial?: StoryCard;
   assets?: Asset[];
+  spaceId?: string | null;
 }) {
   const { library, upsert, refresh } = useWorkspace();
   const navigate = useNavigate();
   const [draft, setDraft] = useState<StorySetup>(() => ({
     title: initial?.title ?? "",
     overview: initial?.overview ?? "",
-    spaceId: initial?.spaceId ?? null,
+    spaceId: initial?.spaceId ?? spaceId,
     newSpaceName: null,
     tags: initial?.tags ?? [],
     startingSection: initial?.startingSection ?? "overview",
@@ -99,7 +95,6 @@ export function StorySetupForm({
     seriesId: initial?.seriesId ?? null,
     revision: initial?.revision ?? 1,
   }));
-  const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [dirty, setDirty] = useState(false);
@@ -129,10 +124,6 @@ export function StorySetupForm({
   }
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!initial && step < 2) {
-      setStep((s) => s + 1);
-      return;
-    }
     setBusy(true);
     setError("");
     try {
@@ -171,35 +162,19 @@ export function StorySetupForm({
   return (
     <>
       <form className="story-setup" onSubmit={submit}>
-        {!initial ? (
-          <ol className="onboarding-steps">
-            {["The idea", "The world around it", "Your starting point"].map(
-              (label, i) => (
-                <li
-                  key={label}
-                  className={
-                    step === i ? "current" : step > i ? "complete" : ""
-                  }
-                >
-                  <span>{i + 1}</span>
-                  {label}
-                </li>
-              ),
-            )}
-          </ol>
-        ) : null}
         <fieldset disabled={busy}>
-          {initial || step === 0 ? (
-            <div className="setup-step">
-              {!initial ? (
-                <>
-                  <p className="eyebrow">01 / The spark</p>
-                  <h2>What story is on your mind?</h2>
-                  <p className="muted">A name is enough to begin.</p>
-                </>
-              ) : null}
-              <label>
-                Story name
+          <div className="setup-step">
+            {!initial ? (
+              <>
+                <h2>What story is on your mind?</h2>
+                <p className="muted">
+                  A name is enough. You'll land on the story home and can open
+                  any section from there.
+                </p>
+              </>
+            ) : null}
+            <label>
+              Story name
                 <Input
                   required
                   autoFocus={!initial}
@@ -208,79 +183,48 @@ export function StorySetupForm({
                   value={draft.title}
                   onChange={(e) => edit({ title: e.target.value })}
                 />
+                {!initial ? (
+                  <span className="field-hint">
+                    Only the story name is required.
+                  </span>
+                ) : null}
               </label>
-              <label>
-                Brief story overview <span className="optional">Optional</span>
-                <Textarea
-                  maxLength={4000}
-                  rows={5}
-                  placeholder="A character, a place, a question you can't let go of…"
-                  value={draft.overview}
-                  onChange={(e) => edit({ overview: e.target.value })}
-                />
-              </label>
-            </div>
-          ) : null}
-          {initial || step === 1 ? (
-            <div className="setup-step">
-              {!initial ? (
-                <p className="eyebrow">02 / The wider world</p>
-              ) : null}
-              <h2>
-                {initial
-                  ? "Organisation and tags"
-                  : "Give it a place to belong."}
-              </h2>
-              {!initial ? (
-                <>
-                  <label>
-                    Story space
-                    <Select
-                      value={draft.spaceId ?? ""}
-                      onChange={(e) =>
-                        edit({
-                          spaceId: e.target.value || null,
-                          seriesId: null,
-                          coverAssetId: null,
-                        })
-                      }
-                    >
-                      <option value="">A new space for this story</option>
-                      {library?.spaces.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </label>
-                  {!draft.spaceId ? (
-                    <label>
-                      New space name <span className="optional">Optional</span>
-                      <Input
-                        maxLength={120}
-                        placeholder="Use the story name"
-                        value={draft.newSpaceName ?? ""}
-                        onChange={(e) =>
-                          edit({ newSpaceName: e.target.value || null })
-                        }
-                      />
-                    </label>
-                  ) : (
-                    <p className="field-hint">
-                      Characters, world information and assets will be shared
-                      with stories in this space.
-                    </p>
-                  )}
-                </>
-              ) : (
-                <div className="space-summary">
-                  <Icon name="world" />
-                  <div>
-                    <strong>{initial.spaceName}</strong>
-                    <p>Shared setting, characters and assets</p>
-                  </div>
+            <label>
+              Brief story overview <span className="optional">Optional</span>
+              <Textarea
+                maxLength={4000}
+                rows={5}
+                placeholder="A character, a place, a question you can't let go of…"
+                value={draft.overview}
+                onChange={(e) => edit({ overview: e.target.value })}
+              />
+            </label>
+            {!initial ? (
+              <div className="space-summary">
+                <Icon name="world" />
+                <div>
+                  <strong>
+                    {library?.spaces.find((space) => space.id === draft.spaceId)
+                      ?.name ?? "This space"}
+                  </strong>
+                  <p>
+                    This story joins that space. Places, peoples and assets stay
+                    shared.
+                  </p>
                 </div>
-              )}
+              </div>
+            ) : null}
+          </div>
+          {initial ? (
+            <div className="setup-step">
+              <h2>Organisation and tags</h2>
+              <div className="space-summary">
+                <Icon name="world" />
+                <div>
+                  <strong>{initial.spaceName}</strong>
+                  <p>Shared setting, characters and assets</p>
+                </div>
+              </div>
               {draft.spaceId ? (
                 <>
                   <label>
@@ -402,39 +346,6 @@ export function StorySetupForm({
               </div>
             </div>
           ) : null}
-          {!initial && step === 2 ? (
-            <div className="setup-step">
-              <p className="eyebrow">03 / Follow your curiosity</p>
-              <h2>Where would you like to start?</h2>
-              <p className="muted">
-                There’s no right order. You can switch sections whenever you
-                like.
-              </p>
-              <div className="starting-grid">
-                {sections.map((s) => (
-                  <label
-                    key={s.id}
-                    className={`starting-choice ${draft.startingSection === s.id ? "selected" : ""}`}
-                  >
-                    <Input
-                      type="radio"
-                      name="starting"
-                      value={s.id}
-                      checked={draft.startingSection === s.id}
-                      onChange={() =>
-                        edit({ startingSection: s.id as Section })
-                      }
-                    />
-                    <Icon name={s.id} />
-                    <span>
-                      <strong>{s.label}</strong>
-                      {s.future ? <small>Workspace coming next</small> : null}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          ) : null}
           {initial ? (
             <div className="setup-step">
               <h2>Cover artwork</h2>
@@ -476,34 +387,20 @@ export function StorySetupForm({
             </p>
           ) : null}
           <div className="setup-actions">
-            {!initial && step > 0 ? (
-              <Button
-                className="button secondary"
-                type="button"
-                onClick={() => setStep((s) => s - 1)}
-              >
-                Back
-              </Button>
-            ) : null}
             <Button
               className="button"
-              disabled={!draft.title.trim() || busy}
+              disabled={
+                !draft.title.trim() || busy || (!initial && !draft.spaceId)
+              }
               type="submit"
             >
               {busy
                 ? "Saving…"
                 : initial
                   ? "Save story details"
-                  : step === 2
-                    ? "Create story"
-                    : "Continue"}
+                  : "Create story"}
               <Icon name="arrow" size={17} />
             </Button>
-            {!initial && step === 0 ? (
-              <span className="field-hint">
-                Only the story name is required.
-              </span>
-            ) : null}
           </div>
         </fieldset>
       </form>

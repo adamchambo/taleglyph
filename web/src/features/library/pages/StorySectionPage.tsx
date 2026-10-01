@@ -6,11 +6,60 @@ import { TitleForm } from "../../../components/ui/TitleForm";
 import { Icon } from "../../../components/ui/Icon";
 import { WorldDetailPage } from "../../world/pages/WorldDetailPage";
 import { AssetLibraryPage } from "../../assets/pages/AssetLibraryPage";
-import { StoryDetailPage } from "../../stories/pages/StoryDetailPage";
 import { useResource } from "../../../hooks/useResource";
 import { comicApi } from "../../comics/api/comicApi";
 import { libraryApi } from "../api/libraryApi";
+import type { Novel } from "../../stories/types";
 import { sections, type Section } from "../types";
+function StoryNovels() {
+  const { story, refresh } = useWorkspace();
+  const navigate = useNavigate();
+  const id = story!.id;
+  const novels = useResource(
+    useCallback((signal: AbortSignal) => libraryApi.novels(id, signal), [id]),
+  );
+  return (
+    <section>
+      <p className="eyebrow">{story!.title}</p>
+      <h1>Novels</h1>
+      <p className="intro">
+        A story can hold more than one novel. Chapters belong to the novel you
+        open. A series groups stories, and is separate from this list.
+      </p>
+      <ResourceState
+        loading={novels.loading}
+        error={novels.error}
+        retry={novels.reload}
+      />
+      <div className="cards">
+        {novels.data?.map((novel: Novel) => (
+          <Link
+            className="card comic-entry"
+            key={novel.id}
+            to={`/stories/${id}/novels/${novel.id}`}
+          >
+            <Icon name="novel" size={30} />
+            <h2>{novel.title}</h2>
+            <span>
+              {novel.chapterCount}{" "}
+              {novel.chapterCount === 1 ? "chapter" : "chapters"}{" "}
+              <Icon name="arrow" size={16} />
+            </span>
+          </Link>
+        ))}
+      </div>
+      <TitleForm
+        label="Novel title"
+        action="Add novel"
+        onCreate={async (title) => {
+          const novel = await libraryApi.createNovel(id, title);
+          void refresh();
+          navigate(`/stories/${id}/novels/${novel.id}`);
+        }}
+      />
+    </section>
+  );
+}
 function StoryComics() {
   const { story, refresh } = useWorkspace();
   const navigate = useNavigate();
@@ -23,7 +72,7 @@ function StoryComics() {
       <p className="eyebrow">{story!.title}</p>
       <h1>Comic studio</h1>
       <p className="intro">
-        Start with a blank page, or adapt a scene from your novel.
+        A story can hold more than one comic. Open one, or start a blank comic.
       </p>
       <ResourceState
         loading={comics.loading}
@@ -51,7 +100,7 @@ function StoryComics() {
         }}
       />
       <Link to={`/stories/${id}/novel`}>
-        Open novel to adapt existing scenes →
+        Open a novel to adapt existing scenes →
       </Link>
     </section>
   );
@@ -66,7 +115,7 @@ export function StorySectionPage({ section }: { section: Section }) {
         retry={refresh}
       />
     );
-  if (section === "novel") return <StoryDetailPage />;
+  if (section === "novel") return <StoryNovels />;
   if (section === "comic") return <StoryComics />;
   if (section === "assets") return <AssetLibraryPage />;
   if (section === "characters")

@@ -39,8 +39,9 @@ export function StoryCards({ stories }: { stories: StoryCard[] }) {
                 })}
               </span>
               <span>
-                {story.chapterCount > 0 ? "1 novel" : "0 novels"} ·{" "}
-                {story.comicCount} {story.comicCount === 1 ? "comic" : "comics"}
+                {story.novelCount} {story.novelCount === 1 ? "novel" : "novels"}{" "}
+                · {story.comicCount}{" "}
+                {story.comicCount === 1 ? "comic" : "comics"}
               </span>
             </div>
           </div>

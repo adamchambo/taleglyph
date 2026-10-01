@@ -1,4 +1,5 @@
 using Talechemy.Api.DTOs.Library;
+using Talechemy.Api.DTOs.Stories;
 using Talechemy.Api.Models.Stories;
 using Talechemy.Api.Models.World;
 using Talechemy.Api.Models.Comics;
@@ -54,6 +55,13 @@ public sealed class LibraryService(ILibraryRepository repo)
     {
         var storyId=await repo.StoryFor(kind,id,ct)??throw new WorkflowException(404,"Content not found.");
         var story=await Card(storyId,ct);return new(story.Id,story.SpaceId);
+    }
+    public Task<NovelResponse[]> Novels(Guid id,CancellationToken ct)=>repo.Novels(id,ct);
+    public async Task<NovelResponse> CreateNovel(Guid id,string title,CancellationToken ct)
+    {
+        _=await repo.Story(id,ct)??throw new WorkflowException(404,"Story not found.");
+        var novel=new Novel {Id=Guid.NewGuid(),StoryId=id,Title=title.Trim()};repo.Add(novel);await repo.Save(ct);
+        return new(novel.Id,novel.StoryId,novel.Title,0);
     }
     public async Task<Guid> CreateComic(Guid id,string title,CancellationToken ct)
     {

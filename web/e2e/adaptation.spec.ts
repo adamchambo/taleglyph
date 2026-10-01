@@ -44,6 +44,8 @@ test("write, adapt, place artwork, reuse a template, and review changed prose", 
   await page
     .getByRole("button", { name: "Create manuscript", exact: true })
     .click();
+  await page.getByLabel("Novel title").fill("The Lantern Road");
+  await page.getByRole("button", { name: "Add novel", exact: true }).click();
   await page.getByLabel("Chapter title").fill("A Light Beyond the Trees");
   await page.getByRole("button", { name: "Add chapter", exact: true }).click();
   await expect(page).toHaveURL(/\/chapters\/[a-f0-9-]+$/);

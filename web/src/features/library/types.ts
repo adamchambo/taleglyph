@@ -26,6 +26,7 @@ export type StoryCard = {
   comicCount: number;
   characterCount: number;
   assetCount: number;
+  novelCount: number;
 };
 export type LibrarySnapshot = {
   stories: StoryCard[];

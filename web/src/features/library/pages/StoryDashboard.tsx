@@ -78,9 +78,7 @@ export function StoryDashboard() {
                 : s.id === "assets"
                   ? `${story.assetCount} assets`
                   : s.id === "novel"
-                    ? story.chapterCount > 0
-                      ? "1 novel"
-                      : "0 novels"
+                    ? `${story.novelCount} ${story.novelCount === 1 ? "novel" : "novels"}`
                     : s.id === "comic"
                       ? `${story.comicCount} ${story.comicCount === 1 ? "comic" : "comics"}`
                       : s.id === "world"

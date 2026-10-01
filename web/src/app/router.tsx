@@ -9,9 +9,12 @@ import { AssetLibraryPage } from "../features/assets/pages/AssetLibraryPage";
 import { ExplorePage } from "../features/explore/pages/ExplorePage";
 import { NotesPage } from "../features/notes/pages/NotesPage";
 import { ChapterEditorPage } from "../features/stories/pages/ChapterEditorPage";
+import { NovelChapterPage } from "../features/stories/pages/NovelChapterPage";
 import { ComicWorkspacePage } from "../features/comics/pages/ComicWorkspacePage";
 import { LibraryPage } from "../features/library/pages/LibraryPage";
 import { StoryDashboard } from "../features/library/pages/StoryDashboard";
+import { SpaceHomePage } from "../features/library/pages/SpaceHomePage";
+import { SpaceSetupPage } from "../features/library/pages/SpaceSetupPage";
 import { StorySetupPage } from "../features/library/pages/StorySetupPage";
 import { StorySectionPage } from "../features/library/pages/StorySectionPage";
 import { AppearancePage } from "../features/library/pages/AppearancePage";
@@ -26,8 +29,14 @@ export const router = createBrowserRouter([
       { path: "stories", element: <ManuscriptPage /> },
       { path: "library", element: <LibraryPage /> },
       { path: "appearance", element: <AppearancePage /> },
+      { path: "spaces/new", element: <SpaceSetupPage /> },
+      { path: "spaces/:spaceId", element: <SpaceHomePage /> },
       { path: "stories/new", element: <StorySetupPage /> },
       { path: "stories/:storyId", element: <StoryDashboard /> },
+      {
+        path: "stories/:storyId/novels/:novelId",
+        element: <NovelChapterPage />,
+      },
       {
         path: "stories/:storyId/settings",
         element: <StorySetupPage editing />,

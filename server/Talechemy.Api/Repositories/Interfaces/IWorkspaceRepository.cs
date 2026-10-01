@@ -7,10 +7,12 @@ public interface IWorkspaceRepository
 {
     Task<bool> WorldExists(Guid id, CancellationToken ct);
     Task<Story?> Story(Guid id, CancellationToken ct);
+    Task<Novel?> Novel(Guid id, CancellationToken ct);
+    Task<Chapter[]> Chapters(Guid novelId, CancellationToken ct);
     Task<Chapter?> Chapter(Guid id, CancellationToken ct);
     Task<Scene?> Scene(Guid id, CancellationToken ct);
     Task<Scene[]> Scenes(Guid chapterId, CancellationToken ct);
-    Task<int> NextChapterOrder(Guid storyId, CancellationToken ct);
+    Task<int> NextChapterOrder(Guid novelId, CancellationToken ct);
     Task<Comic?> Comic(Guid id, CancellationToken ct);
     Task<ComicPage?> Page(Guid id, CancellationToken ct);
     Task<ComicPage[]> Pages(Guid comicId, CancellationToken ct);

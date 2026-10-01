@@ -53,9 +53,9 @@ export function LibraryPage() {
             Build a world, follow a character, or start with a single scene.
           </p>
         </div>
-        <Link className="button primary-create" to="/stories/new">
+        <Link className="button primary-create" to="/spaces/new">
           <Icon name="plus" size={18} />
-          New story
+          New space
         </Link>
       </div>
       <ResourceState loading={loading} error={error} retry={refresh} />
@@ -71,6 +71,27 @@ export function LibraryPage() {
             <Icon name="arrow" />
           </span>
         </Link>
+      ) : null}
+      {library && library.spaces.length > 0 ? (
+        <div className="space-list">
+          {library.spaces.map((space) => {
+            const count = stories.filter(
+              (story) => story.spaceId === space.id,
+            ).length;
+            return (
+              <Link
+                className="space-entry"
+                key={space.id}
+                to={`/spaces/${space.id}`}
+              >
+                <strong>{space.name}</strong>
+                <span>
+                  {count} {count === 1 ? "story" : "stories"}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       ) : null}
       <div className="library-controls">
         <label className="search-field">
@@ -96,7 +117,13 @@ export function LibraryPage() {
       </div>
       {[...groups].map(([key, { label, items }]) => (
         <div key={key} className="story-group">
-          <h2 className="group-heading">{label}</h2>
+          <h2 className="group-heading">
+            {group === "space" ? (
+              <Link to={`/spaces/${key}`}>{label}</Link>
+            ) : (
+              label
+            )}
+          </h2>
           <StoryCards stories={items ?? []} />
         </div>
       ))}
@@ -109,11 +136,11 @@ export function LibraryPage() {
           <p>
             {query
               ? "Try another title, space or tag."
-              : "Give your idea a name. The rest can unfold as you go."}
+              : "Create a space first. Stories are added inside it."}
           </p>
           {!query ? (
-            <Link className="button" to="/stories/new">
-              Create your first story <Icon name="arrow" size={17} />
+            <Link className="button" to="/spaces/new">
+              Create a space <Icon name="arrow" size={17} />
             </Link>
           ) : null}
         </div>

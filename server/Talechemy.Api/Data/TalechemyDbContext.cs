@@ -22,6 +22,7 @@ public sealed class TalechemyDbContext(DbContextOptions<TalechemyDbContext> opti
     public DbSet<Experiment> Experiments => Set<Experiment>();
     public DbSet<Scene> Scenes => Set<Scene>();
     public DbSet<Chapter> Chapters => Set<Chapter>();
+    public DbSet<Novel> Novels => Set<Novel>();
     public DbSet<Series> Series => Set<Series>();
     public DbSet<Story> Stories => Set<Story>();
     public DbSet<AdaptationLink> AdaptationLinks => Set<AdaptationLink>();
