@@ -14,6 +14,11 @@ public class SchemaTests
             .Options;
         using var db = new TalechemyDbContext(options);
         var sql = db.Database.GenerateCreateScript();
+        var novel = db.Model.FindEntityType(typeof(Talechemy.Api.Models.Stories.Novel))!;
+        var manuscript = novel.FindProperty("ManuscriptJson")!;
+        Assert.True(manuscript.IsNullable);
+        Assert.True(manuscript.IsConcurrencyToken);
+        Assert.Equal("text", manuscript.GetColumnType());
         var story = db.Model.FindEntityType(typeof(Talechemy.Api.Models.Stories.Story))!;
         Assert.True(story.FindProperty("CoverAssetId")!.IsNullable);
         var cover = Assert.Single(story.GetForeignKeys(), fk => fk.Properties.Single().Name == "CoverAssetId");

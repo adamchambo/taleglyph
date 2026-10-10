@@ -8,6 +8,15 @@ import type {
 export const manuscriptApi = {
   novel: (id: string, signal?: AbortSignal) =>
     apiClient<NovelWorkspace>(`/manuscripts/novels/${id}`, { signal }),
+  saveDocument: (
+    id: string,
+    documentJson: string,
+    expectedDocumentJson: string | null,
+  ) =>
+    apiClient<void>(`/manuscripts/novels/${id}/document`, {
+      method: "PUT",
+      body: JSON.stringify({ documentJson, expectedDocumentJson }),
+    }),
   createChapter: (id: string, title: string) =>
     apiClient<Chapter>(`/manuscripts/novels/${id}/chapters`, {
       method: "POST",

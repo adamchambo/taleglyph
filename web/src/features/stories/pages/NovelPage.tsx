@@ -1,101 +1,144 @@
 import { useCallback, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useWorkspace } from "../../../app/workspaceContext";
 import { useResource } from "../../../hooks/useResource";
 import { useUnsavedChanges } from "../../../hooks/useUnsavedChanges";
 import { ResourceState } from "../../../components/ui/ResourceState";
 import { Button } from "../../../components/ui/Button";
-import { Icon } from "../../../components/ui/Icon";
-import { TitleForm } from "../../../components/ui/TitleForm";
-import { useOpenWhenEmpty } from "../../../hooks/useOpenWhenEmpty";
-import { CoverageEditor } from "../../library/components/CoverageEditor";
-import { WorkDetailsForm } from "../../library/components/WorkDetailsForm";
 import { useStoryGraph } from "../../library/hooks/useStoryGraph";
+import type { StoryLink } from "../../library/types";
 import { manuscriptApi } from "../api/manuscriptApi";
 import type { NovelWorkspace } from "../types";
+import { ManuscriptEditor } from "../components/ManuscriptEditor";
+import { NovelDetailsDialog } from "../components/NovelDetailsDialog";
+import { useManuscriptAutosave } from "../hooks/useManuscriptAutosave";
+import {
+  importLegacy,
+  identify,
+  type Manuscript,
+} from "../manuscript/document";
+
+type View = "write" | "plan";
+
 function Novel({ data }: { data: NovelWorkspace }) {
   const { library } = useWorkspace();
-  const navigate = useNavigate();
+  const [search] = useSearchParams();
   const graph = useStoryGraph(data.novel.spaceId);
   const [novel, setNovel] = useState(data.novel);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsDirty, setDetailsDirty] = useState(false);
-  const [adding, toggleAdding, closeAdding] = useOpenWhenEmpty(
-    data.chapters.length === 0,
+  // A deep link to a heading always opens in the writing view.
+  const [view, setView] = useState<View>("write");
+  const [initial] = useState(() =>
+    data.manuscriptJson
+      ? identify(JSON.parse(data.manuscriptJson) as Manuscript)
+      : importLegacy(data.chapters, data.legacyScenes),
   );
-  useUnsavedChanges(detailsDirty);
+  const { setDocument, status, dirty, retry } = useManuscriptAutosave({
+    novelId: novel.id,
+    serverJson: data.manuscriptJson,
+    initialJson: JSON.stringify(initial),
+  });
+  const [links, setLinks] = useState<StoryLink[] | null>(null);
+  useUnsavedChanges(dirty || detailsDirty);
+  const coverage = (links ?? graph.data?.links ?? []).filter(
+    (l) => l.fromKind === "novel" && l.fromId === novel.id,
+  );
+  const arcs = [...(graph.data?.arcs ?? [])]
+    .filter((a) =>
+      coverage.some((l) =>
+        l.toKind === "arc" ? l.toId === a.id : l.toId === a.storyId,
+      ),
+    )
+    .sort((a, b) => {
+      const stories = library?.stories ?? [];
+      return (
+        (stories.find((s) => s.id === a.storyId)?.order ?? 0) -
+          (stories.find((s) => s.id === b.storyId)?.order ?? 0) ||
+        a.storyId.localeCompare(b.storyId) ||
+        a.order - b.order
+      );
+    });
+  function closeDetails() {
+    // The dialog unmounts and drops any unsaved form draft, so clear the flag.
+    setDetailsOpen(false);
+    setDetailsDirty(false);
+  }
   return (
     <>
-      <Link to={`/spaces/${novel.spaceId}/novels`}>← Novels</Link>
-      <p className="eyebrow">Novel</p>
-      <h1>{novel.title}</h1>
+      <header className="novel-topbar">
+        <Link
+          className="novel-topbar-back"
+          to={`/spaces/${novel.spaceId}/novels`}
+        >
+          ← Novels
+        </Link>
+        <h1 className="novel-topbar-title" title={novel.title}>
+          {novel.title}
+        </h1>
+        <div className="novel-topbar-views" role="group" aria-label="View">
+          <button
+            type="button"
+            aria-pressed={view === "write"}
+            onClick={() => setView("write")}
+          >
+            Write
+          </button>
+          <button
+            type="button"
+            aria-pressed={view === "plan"}
+            onClick={() => setView("plan")}
+          >
+            Plan
+          </button>
+        </div>
+        <span
+          role="status"
+          className={`novel-topbar-status is-${status.kind}`}
+          title={"message" in status ? status.message : undefined}
+        >
+          {status.kind === "saved" && "Saved"}
+          {status.kind === "saving" && "Saving…"}
+          {status.kind === "dirty" && "Unsaved changes"}
+          {(status.kind === "error" || status.kind === "conflict") &&
+            status.message}
+          {status.kind === "error" && (
+            <Button variant="secondary" onClick={() => void retry()}>
+              Retry
+            </Button>
+          )}
+        </span>
+        <Button variant="secondary" onClick={() => setDetailsOpen(true)}>
+          Details
+        </Button>
+      </header>
       <ResourceState
         loading={graph.loading}
         error={graph.error}
         retry={graph.reload}
       />
-      {graph.data ? (
-        <CoverageEditor
-          label="What this novel tells"
-          fromKind="novel"
-          fromId={novel.id}
+      <ManuscriptEditor
+        initial={initial}
+        onChange={setDocument}
+        arcs={arcs}
+        targetId={search.get("heading") ?? ""}
+        view={view}
+        onViewChange={setView}
+      />
+      {detailsOpen ? (
+        <NovelDetailsDialog
+          novel={novel}
           stories={
             library?.stories.filter((s) => s.spaceId === novel.spaceId) ?? []
           }
-          arcs={graph.data.arcs}
-          initial={graph.data.links}
-        />
-      ) : null}
-      <div className="section-heading">
-        <h2>Chapters</h2>
-        <Button
-          className="primary-create"
-          aria-expanded={adding}
-          aria-controls="chapter-create"
-          onClick={toggleAdding}
-        >
-          <Icon name="plus" size={18} />
-          New chapter
-        </Button>
-      </div>
-      {adding ? (
-        <div className="create-panel" id="chapter-create">
-          <TitleForm
-            label="Chapter title"
-            action="Add chapter"
-            onCreate={async (title) => {
-              const chapter = await manuscriptApi.createChapter(
-                novel.id,
-                title,
-              );
-              closeAdding();
-              navigate(`/chapters/${chapter.id}`);
-            }}
-          />
-        </div>
-      ) : null}
-      {data.chapters.map((chapter) => (
-        <Link
-          className="chapter-row"
-          key={chapter.id}
-          to={`/chapters/${chapter.id}`}
-        >
-          <span>{String(chapter.order).padStart(2, "0")}</span>
-          <strong>{chapter.title}</strong>
-          <span>→</span>
-        </Link>
-      ))}
-      {!data.chapters.length ? <p>This novel has no chapters yet.</p> : null}
-      <details className="work-settings">
-        <summary>Title and cover</summary>
-        <WorkDetailsForm
-          kind="novel"
-          id={novel.id}
-          spaceId={novel.spaceId}
-          initial={{ title: novel.title, coverAssetId: novel.coverAssetId }}
+          arcs={graph.data?.arcs ?? null}
+          links={links ?? graph.data?.links ?? []}
           onSaved={(details) => setNovel((n) => ({ ...n, ...details }))}
           onDirty={setDetailsDirty}
+          onLinksChanged={setLinks}
+          onClose={closeDetails}
         />
-      </details>
+      ) : null}
     </>
   );
 }

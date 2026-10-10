@@ -11,6 +11,7 @@ export function CoverageEditor({
   arcs,
   initial,
   label,
+  onChanged,
 }: {
   fromKind: LinkSource;
   fromId: string;
@@ -18,6 +19,7 @@ export function CoverageEditor({
   arcs: Arc[];
   initial: StoryLink[];
   label: string;
+  onChanged?: (links: StoryLink[]) => void;
 }) {
   const [links, setLinks] = useState(() =>
     initial.filter((l) => l.fromKind === fromKind && l.fromId === fromId),
@@ -47,6 +49,7 @@ export function CoverageEditor({
         toId,
       });
       setLinks((items) => [...items, link]);
+      onChanged?.([...links, link]);
       setChoice("");
     });
   }
@@ -56,6 +59,7 @@ export function CoverageEditor({
     void run(async () => {
       await spaceApi.deleteLink(link.id);
       setLinks((items) => items.filter((l) => l.id !== link.id));
+      onChanged?.(links.filter((l) => l.id !== link.id));
     });
   }
   return (

@@ -17,7 +17,22 @@ public sealed class AuthoringService(IWorkspaceRepository repo)
     {
         var novel = await repo.Novel(id, ct) ?? throw new WorkflowException(404, "Novel not found.");
         var chapters = await repo.Chapters(id, ct);
-        return new(Map(novel, chapters.Length), chapters.Select(x => x.ToResponse()).ToArray());
+        var scenes = new List<SceneResponse>();
+        if (novel.ManuscriptJson is null)
+            foreach (var chapter in chapters)
+                scenes.AddRange((await repo.Scenes(chapter.Id, ct)).Select(x => x.ToResponse()));
+        return new(Map(novel, chapters.Length), chapters.Select(x => x.ToResponse()).ToArray(), novel.ManuscriptJson, scenes);
+    }
+    public async Task SaveManuscript(Guid id, ManuscriptRequest request, CancellationToken ct)
+    {
+        var novel = await repo.Novel(id, ct) ?? throw new WorkflowException(404, "Novel not found.");
+        if (novel.ManuscriptJson != request.ExpectedDocumentJson)
+            throw new WorkflowException(409, "This manuscript changed elsewhere. Copy your draft before reloading.");
+        ManuscriptValidation.Validate(request.DocumentJson);
+        novel.ManuscriptJson = request.DocumentJson;
+        try { await repo.Save(ct); }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+        { throw new WorkflowException(409, "This manuscript changed elsewhere. Copy your draft before reloading."); }
     }
     public async Task<ChapterWorkspace> GetChapter(Guid id, CancellationToken ct)
     {

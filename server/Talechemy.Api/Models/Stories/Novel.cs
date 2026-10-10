@@ -6,5 +6,6 @@ public sealed class Novel
     public Guid WorldId { get; set; }
     public string Title { get; set; } = "";
     public Guid? CoverAssetId { get; set; }
+    public string? ManuscriptJson { get; set; }
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

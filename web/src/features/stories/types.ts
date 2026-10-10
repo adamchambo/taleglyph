@@ -8,6 +8,8 @@ export type Novel = {
 export type NovelWorkspace = {
   novel: Novel;
   chapters: Chapter[];
+  manuscriptJson: string | null;
+  legacyScenes: Scene[];
 };
 export type Chapter = {
   id: string;
