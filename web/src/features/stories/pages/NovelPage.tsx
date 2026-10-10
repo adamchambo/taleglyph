@@ -97,11 +97,13 @@ function Novel({ data }: { data: NovelWorkspace }) {
           className={`novel-topbar-status is-${status.kind}`}
           title={"message" in status ? status.message : undefined}
         >
-          {status.kind === "saved" && "Saved"}
-          {status.kind === "saving" && "Saving…"}
-          {status.kind === "dirty" && "Unsaved changes"}
-          {(status.kind === "error" || status.kind === "conflict") &&
-            status.message}
+          <span className="novel-topbar-status-text">
+            {status.kind === "saved" && "Saved"}
+            {status.kind === "saving" && "Saving…"}
+            {status.kind === "dirty" && "Unsaved changes"}
+            {(status.kind === "error" || status.kind === "conflict") &&
+              status.message}
+          </span>
           {status.kind === "error" && (
             <Button variant="secondary" onClick={() => void retry()}>
               Retry

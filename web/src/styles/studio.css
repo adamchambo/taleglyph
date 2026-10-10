@@ -261,7 +261,12 @@
   justify-content: center;
 }
 .studio-topbar {
-  height: 72px;
+  /* Stays pinned so page-level sticky bars can stack beneath it. z-index sits
+     above page content (novel bar 10, toolbars 5) but below the sidebar (20). */
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  height: var(--app-topbar-height);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -1184,7 +1189,6 @@
   }
   .studio-topbar {
     padding: 0 14px;
-    height: 62px;
   }
   .space-crumb,
   .crumb-divider,
@@ -1604,6 +1608,10 @@ select.form-control {
 }
 html {
   --nav-width: 76px;
+  /* Heights of the pinned bars, shared with page-level sticky offsets. The app
+     header stays visible in focus mode (only the sidebar is removed). */
+  --app-topbar-height: 72px;
+  --novel-topbar-height: 56px;
   background-color: var(--bg);
   /* The canvas revealed by elastic scrolling matches each viewport edge:
      sidebar on the left, header at the top, page background at the bottom. */
@@ -1613,7 +1621,10 @@ html {
       var(--sidebar) 0 var(--nav-width),
       transparent var(--nav-width)
     ),
-    linear-gradient(var(--surface) 0 72px, var(--bg) 72px);
+    linear-gradient(
+      var(--surface) 0 var(--app-topbar-height),
+      var(--bg) var(--app-topbar-height)
+    );
   background-attachment: fixed;
   background-repeat: no-repeat;
 }
@@ -1697,9 +1708,16 @@ html:has(.studio-shell.nav-focus) {
   width: 210px;
 }
 @media (max-width: 760px) {
+  html {
+    --app-topbar-height: 62px;
+  }
   .studio-shell:not(.nav-focus) .studio-body {
     margin-left: 76px;
   }
+}
+/* The skip link must stay reachable above the pinned header and the sidebar. */
+.studio-shell .skip-link {
+  z-index: 50;
 }
 
 .page-navigation {
@@ -1753,7 +1771,10 @@ html:has(.studio-shell.nav-focus) {
 }
 
 .manuscript-layout {
-  --manuscript-sticky-top: var(--novel-topbar-height, 56px);
+  /* Clearance for everything pinned above the page: app header + novel bar. */
+  --manuscript-sticky-top: calc(
+    var(--app-topbar-height) + var(--novel-topbar-height)
+  );
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
   gap: 28px;
@@ -1855,6 +1876,10 @@ html:has(.studio-shell.nav-focus) {
 
 /* Write view: toolbar, sheets on a quiet canvas, page bar. */
 .manuscript-canvas {
+  display: flex;
+  /* `safe` falls back to start alignment when the sheet overflows, so the left
+     edge stays reachable by horizontal scroll instead of being clipped. */
+  justify-content: safe center;
   overflow-x: auto;
   padding: 28px 16px 36px;
   background: var(--bg);
@@ -1951,7 +1976,10 @@ html:has(.studio-shell.nav-focus) {
   color: var(--muted);
   font-size: 13px;
 }
-@media (max-width: 1000px) {
+/* Side-by-side needs: rail 76 + main padding 2*28 + Contents 220 + gap 28 +
+   canvas (794 sheet + 2*16 padding = 826) = 1206px, ~1221px with a classic
+   scrollbar. Stack below 1240px so the sheet is never squeezed off-centre. */
+@media (max-width: 1240px) {
   .manuscript-layout {
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
@@ -1969,16 +1997,24 @@ html:has(.studio-shell.nav-focus) {
   box-sizing: border-box;
   width: 794px;
   min-height: 1123px;
+  flex: none;
   margin: 0 auto;
   padding: 96px;
   background: var(--surface);
-  box-shadow: var(--shadow);
+  /* The ring outlines the sheet without a border, which would shrink the
+     content box below CONTENT_WIDTH_PX and shift pagination. */
+  box-shadow:
+    var(--shadow),
+    0 0 0 1px var(--border);
   color: var(--text);
   font:
     12pt/1.6 Georgia,
     serif;
 }
 .manuscript-paper .tiptap {
+  /* Fills the first sheet's content area (1123 - 2*96) so clicking blank paper
+     lands in the editor. Pagination measures block rects, not this element. */
+  min-height: 931px;
   outline: none;
 }
 .manuscript-paper .tiptap p {
@@ -2075,6 +2111,8 @@ html:has(.studio-shell.nav-focus) {
 }
 .manuscript-page-gap {
   flex: none;
+  /* Cover the sheet's outline ring so it doesn't run through the gap. */
+  margin: 0 -1px;
   height: 32px;
   background: var(--bg);
 }
@@ -2184,14 +2222,22 @@ html:has(.studio-shell.nav-focus) {
 }
 .novel-topbar {
   position: sticky;
-  top: 0;
-  z-index: 20;
+  /* Pins directly under the app header; below the sidebar (20) and app header
+     (15) so overlays and the header always win. */
+  top: var(--app-topbar-height);
+  z-index: 10;
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
   gap: 14px;
+  /* Fixed height: sticky offsets for the toolbar and Contents depend on it. The
+     -28px margin cancels main's 28px padding (not overridden at any breakpoint
+     because `main:has(.novel-topbar)` out-ranks `.studio-shell main`). */
+  box-sizing: border-box;
+  height: var(--novel-topbar-height);
   margin: 0 -28px 20px;
-  padding: 10px 28px;
+  padding: 0 28px;
+  overflow: hidden;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
@@ -2243,10 +2289,15 @@ html:has(.studio-shell.nav-focus) {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
   max-width: 40%;
   color: var(--muted);
   font-size: 13px;
   white-space: nowrap;
+}
+/* Only the message truncates, so the Retry button next to it is never clipped. */
+.novel-topbar-status-text {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -2257,6 +2308,12 @@ html:has(.studio-shell.nav-focus) {
 .novel-topbar .button {
   flex: none;
   padding: 6px 12px;
+}
+@media (max-width: 760px) {
+  .novel-topbar {
+    gap: 8px;
+    padding-inline: 12px;
+  }
 }
 .novel-details {
   display: grid;
