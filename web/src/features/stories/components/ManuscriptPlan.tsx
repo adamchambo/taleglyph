@@ -1,7 +1,7 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Icon } from "../../../components/ui/Icon";
-import { Input, Textarea } from "../../../components/ui/Input";
+import { Input, Select, Textarea } from "../../../components/ui/Input";
 import type { Arc } from "../../library/types";
 import type { OutlineEntry } from "./ManuscriptContents";
 
@@ -51,7 +51,8 @@ export function ManuscriptPlan({
   onSummarize,
   onMove,
   onOpen,
-  onAddArc,
+  onAssign,
+  onAddChapter,
 }: {
   entries: OutlineEntry[];
   arcs: Arc[];
@@ -60,7 +61,8 @@ export function ManuscriptPlan({
   /** beforeId null moves the section to the end of the document. */
   onMove: (id: string, beforeId: string | null) => void;
   onOpen: (id: string) => void;
-  onAddArc: (arc: Arc) => void;
+  onAssign: (id: string, arcId: string | null) => void;
+  onAddChapter: (arcId: string) => void;
 }) {
   const listRef = useRef<HTMLOListElement>(null);
   const gesture = useRef<Drag | null>(null);
@@ -165,9 +167,11 @@ export function ManuscriptPlan({
     return 0;
   }
 
-  const used = new Set(entries.map((entry) => entry.sourceArcId));
-  const suggestions = arcs.filter((arc) => !used.has(arc.id));
   let chapterNumber = 0;
+  const chapterCount = (arcId: string) =>
+    entries.filter(
+      (entry) => entry.kind === "chapter" && entry.sourceArcId === arcId,
+    ).length;
 
   return (
     <section className="manuscript-plan" aria-label="Chapter plan">
@@ -243,6 +247,21 @@ export function ManuscriptPlan({
                         value={entry.summary}
                         onChange={(e) => onSummarize(entry.id, e.target.value)}
                       />
+                      <Select
+                        className="plan-arc-select"
+                        aria-label={`Arc for ${label}`}
+                        value={entry.sourceArcId ?? ""}
+                        onChange={(e) =>
+                          onAssign(entry.id, e.target.value || null)
+                        }
+                      >
+                        <option value="">No arc</option>
+                        {arcs.map((arc) => (
+                          <option key={arc.id} value={arc.id}>
+                            {arc.title}
+                          </option>
+                        ))}
+                      </Select>
                     </div>
                     <Button
                       variant="secondary"
@@ -259,34 +278,38 @@ export function ManuscriptPlan({
         </ol>
       ) : (
         <p className="muted">
-          No chapters yet. Add one from Contents, or start from a suggestion
-          below.
+          No chapters yet. Add one from Contents, or from an arc below.
         </p>
       )}
       {arcs.length ? (
-        <details className="plan-suggestions">
-          <summary>Suggested from linked arcs</summary>
-          {suggestions.length ? (
-            <ul>
-              {suggestions.map((arc) => (
-                <li key={arc.id}>
-                  <div>
-                    <strong>{arc.title}</strong>
-                    {arc.summary ? <p>{arc.summary}</p> : null}
-                  </div>
-                  <Button variant="secondary" onClick={() => onAddArc(arc)}>
-                    Add as chapter
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="muted">Every linked arc is already a chapter.</p>
-          )}
-        </details>
+        <section className="plan-arcs" aria-label="Arcs">
+          {arcs.map((arc) => {
+            const count = chapterCount(arc.id);
+            return (
+              <div className="plan-arc" key={arc.id}>
+                <div>
+                  <strong>{arc.title}</strong>
+                  <p>
+                    {count === 0
+                      ? "No chapters in this arc yet."
+                      : `${count} ${count === 1 ? "chapter" : "chapters"}`}
+                  </p>
+                  {arc.summary ? <p>{arc.summary}</p> : null}
+                </div>
+                <Button
+                  variant="secondary"
+                  onClick={() => onAddChapter(arc.id)}
+                >
+                  Add chapter
+                </Button>
+              </div>
+            );
+          })}
+        </section>
       ) : (
         <p className="field-hint">
-          Link stories or arcs in Details to get suggestions.
+          Link stories or arcs in Details. A chapter can belong to an arc, and
+          an arc can hold several chapters.
         </p>
       )}
     </section>

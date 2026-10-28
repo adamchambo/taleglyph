@@ -29,11 +29,29 @@ internal static class ManuscriptValidation
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
             if (root.GetProperty("type").GetString() != "doc") throw new JsonException();
+            ValidateAppearance(root);
             var ids = new HashSet<string>();
             ValidateChildren("doc", root.GetProperty("content"), ids);
         }
         catch (Exception e) when (e is JsonException or KeyNotFoundException or InvalidOperationException or FormatException)
         { throw new WorkflowException(400, "Invalid manuscript document or heading identity."); }
+    }
+
+    private static readonly HashSet<string> Fonts = ["georgia", "palatino", "times", "system"];
+    private static readonly HashSet<string> FontSizes = ["11", "12", "13"];
+
+    /// <summary>Optional whole-manuscript face. Absent attrs mean the defaults.</summary>
+    private static void ValidateAppearance(JsonElement root)
+    {
+        if (!root.TryGetProperty("attrs", out var attrs)) return;
+        if (attrs.ValueKind != JsonValueKind.Object) throw new JsonException();
+        foreach (var prop in attrs.EnumerateObject())
+        {
+            if (prop.Name is not ("font" or "fontSize")) throw new JsonException();
+            var value = prop.Value.GetString();
+            if (prop.Name == "font" && (value is null || !Fonts.Contains(value))) throw new JsonException();
+            if (prop.Name == "fontSize" && (value is null || !FontSizes.Contains(value))) throw new JsonException();
+        }
     }
 
     private static void ValidateChildren(string parent, JsonElement content, HashSet<string> headingIds)

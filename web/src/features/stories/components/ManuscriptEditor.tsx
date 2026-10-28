@@ -7,15 +7,19 @@ import {
 } from "@tiptap/react";
 import type { Node as ProseNode } from "@tiptap/pm/model";
 import { Selection } from "@tiptap/pm/state";
-import { Button } from "../../../components/ui/Button";
 import {
+  appearanceOf,
+  assignArc,
+  fontFamily,
   heading,
+  insertChapter,
   moveSection,
   paragraph,
   renameHeading,
   summarizeHeading,
   type HeadingKind,
   type Manuscript,
+  type ManuscriptFont,
 } from "../manuscript/document";
 import type { Arc } from "../../library/types";
 import { FormattingToolbar } from "./FormattingToolbar";
@@ -28,6 +32,17 @@ import {
   type PaginationStorage,
 } from "./Pagination";
 
+export type ManuscriptChrome = {
+  page: number;
+  pages: number;
+  words: number;
+  chapterWords: number | null;
+};
+
+export type PageControls = {
+  goToPage: (page: number) => void;
+};
+
 type Summary = {
   entries: OutlineEntry[];
   /** Last heading at or before the cursor. */
@@ -35,6 +50,8 @@ type Summary = {
   /** Words in the chapter holding the cursor; null under a bare part heading. */
   chapterWords: number | null;
   totalWords: number;
+  font: string;
+  fontSize: string;
 };
 
 const emptySummary: Summary = {
@@ -42,6 +59,8 @@ const emptySummary: Summary = {
   currentId: null,
   chapterWords: null,
   totalWords: 0,
+  font: "georgia",
+  fontSize: "12",
 };
 
 function countWords(node: ProseNode) {
@@ -82,11 +101,18 @@ function summarise(editor: Editor): Summary {
     for (const section of open) entries[section.index].words += words;
   });
   const active = current >= 0 ? entries[current] : null;
+  const look = appearanceOf({
+    type: "doc",
+    attrs: editor.state.doc.attrs,
+    content: [],
+  });
   return {
     entries,
     currentId: active?.id ?? null,
     chapterWords: active?.kind === "chapter" ? active.words : null,
     totalWords,
+    font: look.font,
+    fontSize: look.size,
   };
 }
 
@@ -112,6 +138,8 @@ export function ManuscriptEditor({
   targetId,
   view,
   onViewChange,
+  onChrome,
+  controlsRef,
 }: {
   initial: Manuscript;
   onChange: (doc: Manuscript) => void;
@@ -119,6 +147,8 @@ export function ManuscriptEditor({
   targetId: string;
   view: "write" | "plan";
   onViewChange: (v: "write" | "plan") => void;
+  onChrome?: (chrome: ManuscriptChrome) => void;
+  controlsRef?: { current: PageControls | null };
 }) {
   // The editor's callbacks are created once; they reach current props and
   // state through this ref, which is refreshed after every render.
@@ -140,23 +170,30 @@ export function ManuscriptEditor({
     [],
   );
 
-  const editor = useEditor({
-    extensions,
-    content: initial,
-    editorProps: {
+  // A fresh object every render makes TipTap call setOptions, which rebinds
+  // the editor DOM and cancels a held key after one character.
+  const editorProps = useMemo(
+    () => ({
       attributes: {
         "aria-label": "Novel manuscript",
         role: "textbox",
         "aria-multiline": "true",
       },
-      handleKeyDown: (_view, event) => {
+      handleKeyDown: (_view: unknown, event: KeyboardEvent) => {
         if (event.key !== "PageUp" && event.key !== "PageDown") return false;
         if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)
           return false;
         latest.current?.stepPage(event.key === "PageDown" ? 1 : -1);
         return true;
       },
-    },
+    }),
+    [],
+  );
+
+  const editor = useEditor({
+    extensions,
+    content: initial,
+    editorProps,
     onUpdate: ({ editor }) =>
       latest.current?.onChange(editor.getJSON() as Manuscript),
     onFocus: () => {
@@ -209,6 +246,7 @@ export function ManuscriptEditor({
 
   function goToPage(n: number) {
     if (!editor) return;
+    if (view !== "write") onViewChange("write");
     const { starts } = paginationOf(editor);
     const target = Math.min(Math.max(1, Math.round(n)), starts.length);
     const pos = starts[target - 1] ?? 0;
@@ -252,6 +290,19 @@ export function ManuscriptEditor({
   const currentDoc = () => editor?.getJSON() as Manuscript;
 
   const shownPage = Math.min(page, pages);
+
+  useEffect(() => {
+    onChrome?.({
+      page: shownPage,
+      pages,
+      words: summary.totalWords,
+      chapterWords: summary.chapterWords,
+    });
+  }, [onChrome, shownPage, pages, summary.totalWords, summary.chapterWords]);
+
+  useEffect(() => {
+    if (controlsRef) controlsRef.current = { goToPage };
+  });
 
   useEffect(() => {
     latest.current = {
@@ -338,59 +389,16 @@ export function ManuscriptEditor({
         <div className="manuscript-write" hidden={view !== "write"}>
           <FormattingToolbar editor={editor} />
           <div className="manuscript-canvas">
-            <div className="manuscript-paper" ref={paperRef}>
-              <EditorContent editor={editor} />
-            </div>
-          </div>
-          <div
-            className="manuscript-pagebar"
-            role="group"
-            aria-label="Page navigation"
-          >
-            <span className="pagebar-position" aria-live="polite">
-              Page {shownPage} of {pages}
-            </span>
-            <Button
-              variant="secondary"
-              disabled={shownPage <= 1}
-              onClick={() => goToPage(shownPage - 1)}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="secondary"
-              disabled={shownPage >= pages}
-              onClick={() => goToPage(shownPage + 1)}
-            >
-              Next
-            </Button>
-            <form
-              className="pagebar-jump"
-              onSubmit={(event) => {
-                event.preventDefault();
-                const value = Number(
-                  new FormData(event.currentTarget).get("page"),
-                );
-                if (Number.isFinite(value) && value > 0) goToPage(value);
+            <div
+              className="manuscript-paper"
+              ref={paperRef}
+              style={{
+                fontFamily: fontFamily(summary.font as ManuscriptFont),
+                fontSize: `${summary.fontSize}pt`,
               }}
             >
-              <span>Go to</span>
-              <input
-                key={shownPage}
-                name="page"
-                type="number"
-                min={1}
-                max={pages}
-                defaultValue={shownPage}
-                aria-label="Go to page"
-              />
-            </form>
-            <span className="pagebar-words">
-              {summary.totalWords.toLocaleString()} words
-              {summary.chapterWords !== null
-                ? ` · ${summary.chapterWords.toLocaleString()} in this chapter`
-                : ""}
-            </span>
+              <EditorContent editor={editor} />
+            </div>
           </div>
         </div>
         {view === "plan" && (
@@ -407,17 +415,12 @@ export function ManuscriptEditor({
               replace(moveSection(currentDoc(), id, beforeId))
             }
             onOpen={openHeading}
-            onAddArc={(arc) => {
-              const doc = currentDoc();
-              replace({
-                ...doc,
-                content: [
-                  ...doc.content,
-                  heading("chapter", arc.title, undefined, arc.summary, arc.id),
-                  paragraph(),
-                ],
-              });
-            }}
+            onAssign={(id, arcId) =>
+              replace(assignArc(currentDoc(), id, arcId))
+            }
+            onAddChapter={(arcId) =>
+              replace(insertChapter(currentDoc(), arcId))
+            }
           />
         )}
       </div>

@@ -855,7 +855,19 @@
 .cast-summary {
   display: grid;
   gap: 12px;
-  max-width: 680px;
+  max-width: 640px;
+  margin: 0 0 28px;
+}
+.cast-summary label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.cast-summary textarea {
+  min-height: 120px;
+  background: var(--surface);
+  resize: vertical;
 }
 .cast-summary .intro {
   margin: 0;
@@ -1874,7 +1886,7 @@ html:has(.studio-shell.nav-focus) {
   font-size: 13px;
 }
 
-/* Write view: toolbar, sheets on a quiet canvas, page bar. */
+/* Write view: toolbar, then sheets on a quiet canvas. */
 .manuscript-canvas {
   display: flex;
   /* `safe` falls back to start alignment when the sheet overflows, so the left
@@ -1949,29 +1961,28 @@ html:has(.studio-shell.nav-focus) {
   background: var(--surface);
   box-shadow: var(--shadow);
 }
-.plan-suggestions {
-  padding: 12px 16px;
+.plan-arc-select {
+  width: auto;
+  max-width: 100%;
+  padding: 6px 32px 6px 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.plan-arcs {
+  display: grid;
+  gap: 10px;
+}
+.plan-arc {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
 }
-.plan-suggestions summary {
-  cursor: pointer;
-}
-.plan-suggestions ul {
-  display: grid;
-  gap: 12px;
-  margin: 14px 0 4px;
-  padding: 0;
-  list-style: none;
-}
-.plan-suggestions li {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 16px;
-}
-.plan-suggestions p {
+.plan-arc p {
   margin: 4px 0 0;
   color: var(--muted);
   font-size: 13px;
@@ -2124,44 +2135,6 @@ html:has(.studio-shell.nav-focus) {
   letter-spacing: 0.04em;
 }
 
-.manuscript-pagebar {
-  position: sticky;
-  bottom: 0;
-  z-index: 5;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--muted);
-  font-size: 13px;
-}
-.manuscript-pagebar .pagebar-position {
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-.manuscript-pagebar .button {
-  padding: 4px 12px;
-  font-size: 13px;
-}
-.pagebar-jump {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.pagebar-jump input {
-  width: 64px;
-  padding: 4px 8px;
-  font-size: 13px;
-}
-.pagebar-words {
-  margin-left: auto;
-  font-variant-numeric: tabular-nums;
-}
-
 .format-toolbar {
   position: sticky;
   top: var(--manuscript-sticky-top, 0);
@@ -2169,8 +2142,8 @@ html:has(.studio-shell.nav-focus) {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 4px;
-  padding: 6px 8px;
+  gap: 6px;
+  padding: 8px 10px;
   overflow-x: auto;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -2183,11 +2156,15 @@ html:has(.studio-shell.nav-focus) {
   background-position: right 12px center;
   font-size: 13px;
 }
+.format-toolbar .format-size {
+  width: 76px;
+  padding-right: 28px;
+}
 .format-toolbar .format-button {
   flex: none;
-  min-width: 30px;
-  min-height: 30px;
-  padding: 4px 8px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 6px 8px;
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
@@ -2218,7 +2195,7 @@ html:has(.studio-shell.nav-focus) {
 }
 .studio-shell main:has(.novel-topbar) {
   max-width: none;
-  padding: 0 28px 70px;
+  padding: 0 28px 28px;
 }
 .novel-topbar {
   position: sticky;
@@ -2260,6 +2237,54 @@ html:has(.studio-shell.nav-focus) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.novel-topbar-pages {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.novel-topbar-pages > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+.novel-topbar-pages > button:hover:not(:disabled) {
+  background: var(--soft);
+  color: var(--text);
+}
+.novel-topbar-pages > button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.novel-topbar-pagecount {
+  min-width: 52px;
+}
+.novel-topbar-jump {
+  width: 52px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+.novel-topbar-words {
+  margin-left: 6px;
+  white-space: nowrap;
 }
 .novel-topbar-views {
   flex: none;

@@ -2,6 +2,15 @@ import { Fragment, type ReactNode } from "react";
 import { useEditorState, type Editor } from "@tiptap/react";
 import { Button } from "../../../components/ui/Button";
 import { Select } from "../../../components/ui/Input";
+import {
+  appearanceOf,
+  manuscriptFonts,
+  manuscriptSizes,
+  withAppearance,
+  type Manuscript,
+  type ManuscriptFont,
+  type ManuscriptSize,
+} from "../manuscript/document";
 
 type Style = "body" | "chapter" | "part";
 type Align = "left" | "center" | "right" | "justify";
@@ -35,6 +44,24 @@ const alignLines: Record<Align, [number, number][]> = {
   ],
 };
 
+function MarkIcon({ path }: { path: string }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={path} />
+    </svg>
+  );
+}
+
 function Divider() {
   return (
     <span
@@ -65,6 +92,8 @@ function AlignIcon({ align }: { align: Align }) {
 }
 
 const emptyState = {
+  font: "georgia" as ManuscriptFont,
+  size: "12" as ManuscriptSize,
   style: "body" as Style,
   nested: false,
   inHeading: false,
@@ -93,7 +122,14 @@ export function FormattingToolbar({ editor }: { editor: Editor | null }) {
           ? Number(editor.getAttributes("heading").level)
           : 0;
         const align = String($from.parent.attrs.textAlign ?? "left");
+        const look = appearanceOf({
+          type: "doc",
+          attrs: editor.state.doc.attrs,
+          content: [],
+        });
         return {
+          font: look.font,
+          size: look.size,
           style: (level === 1
             ? "part"
             : level === 2
@@ -119,6 +155,19 @@ export function FormattingToolbar({ editor }: { editor: Editor | null }) {
     }) ?? emptyState;
   const disabled = !editor;
 
+  function applyAppearance(font: ManuscriptFont, size: ManuscriptSize) {
+    if (!editor) return;
+    const { from, to } = editor.state.selection;
+    editor.commands.setContent(
+      withAppearance(editor.getJSON() as Manuscript, font, size),
+      { emitUpdate: true },
+    );
+    const max = editor.state.doc.content.size;
+    editor.commands.setTextSelection({
+      from: Math.min(from, max),
+      to: Math.min(to, max),
+    });
+  }
   function setStyle(style: Style) {
     if (!editor) return;
     const chain = editor.chain().focus();
@@ -197,21 +246,21 @@ export function FormattingToolbar({ editor }: { editor: Editor | null }) {
         "Quote",
         state.quote,
         () => editor?.chain().focus().toggleBlockquote().run(),
-        "Quote",
+        <MarkIcon path="M7 17a4 4 0 0 1-4-4V7h6v6H6c0 1.1.9 2 2 2v2zm10 0a4 4 0 0 1-4-4V7h6v6h-3c0 1.1.9 2 2 2v2z" />,
         state.inHeading,
       )}
       {toggle(
         "Bulleted list",
         state.bullets,
         () => editor?.chain().focus().toggleBulletList().run(),
-        "• List",
+        <MarkIcon path="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01" />,
         state.inHeading,
       )}
       {toggle(
         "Numbered list",
         state.numbers,
         () => editor?.chain().focus().toggleOrderedList().run(),
-        "1. List",
+        <MarkIcon path="M10 6h11M10 12h11M10 18h11M4 6h1v4M4 10h2M6 16H4c0-1 2-2 2-3s-1-1.5-2-1" />,
         state.inHeading,
       )}
       <Divider />
@@ -234,7 +283,7 @@ export function FormattingToolbar({ editor }: { editor: Editor | null }) {
         disabled={disabled || state.nested || state.inHeading}
         onClick={() => editor?.chain().focus().setHorizontalRule().run()}
       >
-        * * *
+        <MarkIcon path="M4 12h16M8 8l-4 4 4 4M16 8l4 4-4 4" />
       </Button>
       <Divider />
       <Button
@@ -245,7 +294,7 @@ export function FormattingToolbar({ editor }: { editor: Editor | null }) {
         disabled={disabled || !state.canUndo}
         onClick={() => editor?.chain().focus().undo().run()}
       >
-        Undo
+        <MarkIcon path="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H12" />
       </Button>
       <Button
         variant="secondary"
@@ -255,8 +304,41 @@ export function FormattingToolbar({ editor }: { editor: Editor | null }) {
         disabled={disabled || !state.canRedo}
         onClick={() => editor?.chain().focus().redo().run()}
       >
-        Redo
+        <MarkIcon path="m15 14 5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H12" />
       </Button>
+      <Divider />
+      <Select
+        className="format-style"
+        aria-label="Manuscript font"
+        title="Font for the whole manuscript"
+        value={state.font}
+        disabled={disabled}
+        onChange={(e) =>
+          applyAppearance(e.target.value as ManuscriptFont, state.size)
+        }
+      >
+        {manuscriptFonts.map((font) => (
+          <option key={font.id} value={font.id}>
+            {font.label}
+          </option>
+        ))}
+      </Select>
+      <Select
+        className="format-style format-size"
+        aria-label="Manuscript size"
+        title="Body size for the whole manuscript"
+        value={state.size}
+        disabled={disabled}
+        onChange={(e) =>
+          applyAppearance(state.font, e.target.value as ManuscriptSize)
+        }
+      >
+        {manuscriptSizes.map((size) => (
+          <option key={size} value={size}>
+            {size} pt
+          </option>
+        ))}
+      </Select>
     </div>
   );
 }

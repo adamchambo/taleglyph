@@ -6,7 +6,49 @@ export type DocNode = {
   marks?: { type: string; attrs?: Record<string, unknown> }[];
   content?: DocNode[];
 };
-export type Manuscript = { type: "doc"; content: DocNode[] };
+export type Manuscript = {
+  type: "doc";
+  /** Whole-manuscript appearance. Absent means the defaults. */
+  attrs?: { font?: string; fontSize?: string };
+  content: DocNode[];
+};
+export const manuscriptFonts = [
+  { id: "georgia", label: "Georgia", family: "Georgia, serif" },
+  {
+    id: "palatino",
+    label: "Palatino",
+    family: 'Palatino, "Palatino Linotype", "Book Antiqua", serif',
+  },
+  { id: "times", label: "Times", family: '"Times New Roman", Times, serif' },
+  { id: "system", label: "System serif", family: "ui-serif, Georgia, serif" },
+] as const;
+export const manuscriptSizes = ["11", "12", "13"] as const;
+export type ManuscriptFont = (typeof manuscriptFonts)[number]["id"];
+export type ManuscriptSize = (typeof manuscriptSizes)[number];
+const DEFAULT_FONT: ManuscriptFont = "georgia";
+const DEFAULT_SIZE: ManuscriptSize = "12";
+export function appearanceOf(doc: Manuscript): {
+  font: ManuscriptFont;
+  size: ManuscriptSize;
+} {
+  const font = manuscriptFonts.find((item) => item.id === doc.attrs?.font);
+  const size = manuscriptSizes.find((item) => item === doc.attrs?.fontSize);
+  return { font: font?.id ?? DEFAULT_FONT, size: size ?? DEFAULT_SIZE };
+}
+export function fontFamily(font: ManuscriptFont) {
+  return (
+    manuscriptFonts.find((item) => item.id === font)?.family ??
+    manuscriptFonts[0].family
+  );
+}
+/** Stamp a whole-manuscript font and size. Headings stay a multiple of the size. */
+export function withAppearance(
+  doc: Manuscript,
+  font: ManuscriptFont,
+  size: ManuscriptSize,
+): Manuscript {
+  return { ...doc, attrs: { font, fontSize: size } };
+}
 export type HeadingKind = "part" | "chapter";
 export const paragraph = (text = ""): DocNode => ({
   type: "paragraph",
@@ -113,6 +155,60 @@ export function renameHeading(
         : n,
     ),
   };
+}
+/** A chapter may cite an arc. Many chapters can cite the same one. */
+export function assignArc(
+  doc: Manuscript,
+  id: string,
+  sourceArcId: string | null,
+): Manuscript {
+  return {
+    ...doc,
+    content: doc.content.map((node) =>
+      node.type === "heading" && node.attrs?.id === id
+        ? { ...node, attrs: { ...node.attrs, sourceArcId } }
+        : node,
+    ),
+  };
+}
+/**
+ * Append a blank chapter. When an arc is given, place it after the last
+ * chapter that already cites that arc, so the arc's chapters stay together.
+ */
+export function insertChapter(
+  doc: Manuscript,
+  sourceArcId: string | null,
+): Manuscript {
+  const extra = [
+    heading("chapter", "", crypto.randomUUID(), "", sourceArcId),
+    paragraph(),
+  ];
+  let insertAt = doc.content.length;
+  if (sourceArcId) {
+    doc.content.forEach((node, index) => {
+      if (node.type !== "heading" || node.attrs?.sourceArcId !== sourceArcId)
+        return;
+      const level = Number(node.attrs?.level ?? 2);
+      let end = index + 1;
+      while (
+        end < doc.content.length &&
+        !(
+          doc.content[end].type === "heading" &&
+          Number(doc.content[end].attrs?.level ?? 2) <= level
+        )
+      )
+        end++;
+      insertAt = end;
+    });
+  }
+  return identify({
+    ...doc,
+    content: [
+      ...doc.content.slice(0, insertAt),
+      ...extra,
+      ...doc.content.slice(insertAt),
+    ],
+  });
 }
 export function summarizeHeading(
   doc: Manuscript,

@@ -126,14 +126,16 @@ export function WorldDetailPage({
       {world.data ? (
         <>
           {charactersOnly ? (
-            <div className="library-heading">
-              <div>
-                <p className="eyebrow">{world.data.name}</p>
-                <h1>Characters</h1>
-                <CastSummary key={world.data.id} world={world.data} />
+            <>
+              <div className="library-heading">
+                <div>
+                  <p className="eyebrow">{world.data.name}</p>
+                  <h1>Characters</h1>
+                </div>
+                {createButton}
               </div>
-              {createButton}
-            </div>
+              <CastSummary key={world.data.id} world={world.data} />
+            </>
           ) : (
             <>
               <p className="eyebrow">Story world</p>

@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  appearanceOf,
+  assignArc,
   emptyDocument,
   heading,
   identify,
   importLegacy,
+  insertChapter,
   insertHeading,
   moveSection,
   outline,
@@ -11,6 +14,7 @@ import {
   paragraph,
   renameHeading,
   summarizeHeading,
+  withAppearance,
   type DocNode,
   type Manuscript,
 } from "./document";
@@ -157,5 +161,38 @@ describe("manuscript document", () => {
       ],
     };
     expect(pageText(doc)).toBe("one\ntwo\n\nQuoted");
+  });
+  it("lets several chapters cite one arc and inserts the next after that group", () => {
+    const cited = assignArc(assignArc(sample(), "a", "arc-1"), "c", "arc-1");
+    expect(outline(cited).map((entry) => entry.sourceArcId)).toEqual([
+      null,
+      "arc-1",
+      null,
+      null,
+      "arc-1",
+    ]);
+    const inserted = insertChapter(cited, "arc-1");
+    const chapters = outline(inserted).filter(
+      (entry) => entry.kind === "chapter",
+    );
+    expect(chapters.map((entry) => entry.sourceArcId)).toEqual([
+      "arc-1",
+      null,
+      "arc-1",
+      "arc-1",
+    ]);
+    expect(chapters.at(-1)?.title).toBe("");
+  });
+  it("defaults the manuscript face and size, and keeps an explicit choice", () => {
+    expect(appearanceOf(emptyDocument())).toEqual({
+      font: "georgia",
+      size: "12",
+    });
+    const chosen = withAppearance(sample(), "palatino", "13");
+    expect(appearanceOf(chosen)).toEqual({ font: "palatino", size: "13" });
+    expect(appearanceOf(identify(chosen))).toEqual({
+      font: "palatino",
+      size: "13",
+    });
   });
 });

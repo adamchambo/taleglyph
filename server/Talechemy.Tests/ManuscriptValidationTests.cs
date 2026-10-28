@@ -43,6 +43,21 @@ public class ManuscriptValidationTests
     }
 
     [Fact]
+    public void AcceptsManuscriptAppearance()
+    {
+        ManuscriptValidation.Validate("""{"type":"doc","attrs":{"font":"palatino","fontSize":"13"},"content":[{"type":"paragraph"}]}""");
+    }
+
+    [Theory]
+    [InlineData("""{"type":"doc","attrs":{"font":"comic sans"},"content":[{"type":"paragraph"}]}""")]
+    [InlineData("""{"type":"doc","attrs":{"fontSize":"18"},"content":[{"type":"paragraph"}]}""")]
+    [InlineData("""{"type":"doc","attrs":{"color":"red"},"content":[{"type":"paragraph"}]}""")]
+    public void RejectsUnknownAppearance(string json)
+    {
+        Assert.Throws<WorkflowException>(() => ManuscriptValidation.Validate(json));
+    }
+
+    [Fact]
     public void RejectsDuplicateHeadingIds()
     {
         Assert.Throws<WorkflowException>(() => ManuscriptValidation.Validate(Doc($"{Chapter},{Chapter}")));

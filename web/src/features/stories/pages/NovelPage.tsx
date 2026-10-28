@@ -1,15 +1,20 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useWorkspace } from "../../../app/workspaceContext";
 import { useResource } from "../../../hooks/useResource";
 import { useUnsavedChanges } from "../../../hooks/useUnsavedChanges";
 import { ResourceState } from "../../../components/ui/ResourceState";
 import { Button } from "../../../components/ui/Button";
+import { Icon } from "../../../components/ui/Icon";
 import { useStoryGraph } from "../../library/hooks/useStoryGraph";
 import type { StoryLink } from "../../library/types";
 import { manuscriptApi } from "../api/manuscriptApi";
 import type { NovelWorkspace } from "../types";
-import { ManuscriptEditor } from "../components/ManuscriptEditor";
+import {
+  ManuscriptEditor,
+  type ManuscriptChrome,
+  type PageControls,
+} from "../components/ManuscriptEditor";
 import { NovelDetailsDialog } from "../components/NovelDetailsDialog";
 import { useManuscriptAutosave } from "../hooks/useManuscriptAutosave";
 import {
@@ -17,6 +22,76 @@ import {
   identify,
   type Manuscript,
 } from "../manuscript/document";
+
+function PageCluster({
+  chrome,
+  onGo,
+}: {
+  chrome: ManuscriptChrome;
+  onGo: (page: number) => void;
+}) {
+  const [jumping, setJumping] = useState(false);
+  const chapter =
+    chrome.chapterWords === null
+      ? ""
+      : `, ${chrome.chapterWords.toLocaleString()} in this chapter`;
+  function jump(value: string) {
+    const page = Number(value);
+    setJumping(false);
+    if (Number.isFinite(page) && page > 0) onGo(page);
+  }
+  return (
+    <div className="novel-topbar-pages" role="group" aria-label="Pages">
+      <button
+        type="button"
+        aria-label="Previous page"
+        disabled={chrome.page <= 1}
+        onClick={() => onGo(chrome.page - 1)}
+      >
+        <Icon name="back" size={16} />
+      </button>
+      {jumping ? (
+        <input
+          className="novel-topbar-jump"
+          type="number"
+          min={1}
+          max={chrome.pages}
+          autoFocus
+          defaultValue={chrome.page}
+          aria-label="Go to page"
+          onBlur={(event) => jump(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") jump(event.currentTarget.value);
+            if (event.key === "Escape") setJumping(false);
+          }}
+        />
+      ) : (
+        <button
+          type="button"
+          className="novel-topbar-pagecount"
+          aria-label={`Page ${chrome.page} of ${chrome.pages}. Jump to page`}
+          onClick={() => setJumping(true)}
+        >
+          {chrome.page} / {chrome.pages}
+        </button>
+      )}
+      <button
+        type="button"
+        aria-label="Next page"
+        disabled={chrome.page >= chrome.pages}
+        onClick={() => onGo(chrome.page + 1)}
+      >
+        <Icon name="arrow" size={16} />
+      </button>
+      <span
+        className="novel-topbar-words"
+        title={`${chrome.words.toLocaleString()} words${chapter}`}
+      >
+        {chrome.words.toLocaleString()} words
+      </span>
+    </div>
+  );
+}
 
 type View = "write" | "plan";
 
@@ -29,6 +104,13 @@ function Novel({ data }: { data: NovelWorkspace }) {
   const [detailsDirty, setDetailsDirty] = useState(false);
   // A deep link to a heading always opens in the writing view.
   const [view, setView] = useState<View>("write");
+  const [chrome, setChrome] = useState<ManuscriptChrome>({
+    page: 1,
+    pages: 1,
+    words: 0,
+    chapterWords: null,
+  });
+  const pageControls = useRef<PageControls | null>(null);
   const [initial] = useState(() =>
     data.manuscriptJson
       ? identify(JSON.parse(data.manuscriptJson) as Manuscript)
@@ -92,6 +174,10 @@ function Novel({ data }: { data: NovelWorkspace }) {
             Plan
           </button>
         </div>
+        <PageCluster
+          chrome={chrome}
+          onGo={(page) => pageControls.current?.goToPage(page)}
+        />
         <span
           role="status"
           className={`novel-topbar-status is-${status.kind}`}
@@ -126,6 +212,8 @@ function Novel({ data }: { data: NovelWorkspace }) {
         targetId={search.get("heading") ?? ""}
         view={view}
         onViewChange={setView}
+        onChrome={setChrome}
+        controlsRef={pageControls}
       />
       {detailsOpen ? (
         <NovelDetailsDialog

@@ -1,8 +1,19 @@
 import { Extension } from "@tiptap/core";
+import Document from "@tiptap/extension-document";
 import { Plugin } from "@tiptap/pm/state";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
 import { identify, type Manuscript } from "../manuscript/document";
+
+/** Font and size belong to the whole manuscript, not to a selection. */
+const ManuscriptDocument = Document.extend({
+  addAttributes() {
+    return {
+      font: { default: "georgia" },
+      fontSize: { default: "12" },
+    };
+  },
+});
 
 export const Identity = Extension.create({
   name: "manuscriptIdentity",
@@ -48,7 +59,9 @@ export const Identity = Extension.create({
  * allowlist (ManuscriptValidation) rejects those node/mark types.
  */
 export const manuscriptExtensions = [
+  ManuscriptDocument,
   StarterKit.configure({
+    document: false,
     heading: { levels: [1, 2] },
     codeBlock: false,
     link: false,
